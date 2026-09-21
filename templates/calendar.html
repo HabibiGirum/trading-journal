@@ -2,9 +2,8 @@
 
 {% block content %}
 
-<!-- Month navigation & stats -->
 <section class="cal-header">
-    <a class="cal-nav-btn" href="/calendar?year={{ prev_year }}&month={{ prev_month }}">&larr; Prev</a>
+    <a class="cal-nav-btn" href="/calendar?year={{ prev_year }}&month={{ prev_month }}{% if pair_filter %}&pair={{ pair_filter }}{% endif %}">&larr; Prev</a>
     <div class="cal-title-block">
         <h2 class="cal-month-title">{{ month_name }} {{ year }}</h2>
         <div class="cal-month-stats">
@@ -14,11 +13,19 @@
             <span class="cal-stat-pill win-pill">{{ wins }} Win{{ "s" if wins != 1 }}</span>
             <span class="cal-stat-pill loss-pill">{{ losses }} Loss{{ "es" if losses != 1 else "" }}</span>
         </div>
+        <div class="cal-pair-filter">
+            <a href="/calendar?year={{ year }}&month={{ month }}" class="{% if not pair_filter %}is-active{% endif %}">All</a>
+            {% for item in focus_pairs %}
+            <a href="/calendar?year={{ year }}&month={{ month }}&pair={{ item }}" class="{% if pair_filter == item %}is-active{% endif %}">
+                {% if item == 'XAUUSD' %}XAU{% else %}BTC{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        <p class="form-hint">Today {{ today_count }} / {{ max_trades }} trades</p>
     </div>
-    <a class="cal-nav-btn" href="/calendar?year={{ next_year }}&month={{ next_month }}">Next &rarr;</a>
+    <a class="cal-nav-btn" href="/calendar?year={{ next_year }}&month={{ next_month }}{% if pair_filter %}&pair={{ pair_filter }}{% endif %}">Next &rarr;</a>
 </section>
 
-<!-- Calendar grid -->
 <section class="cal-grid-wrap">
     <div class="cal-grid">
         <div class="cal-dow">Mon</div>
@@ -57,9 +64,9 @@
     </div>
 </section>
 
-<!-- Quick-add trade from calendar -->
 <section class="form-panel cal-quick-add">
-    <h2>Quick Add Trade</h2>
+    <h2>Quick add trade</h2>
+    <p class="form-hint">XAU and BTC only. Daily cap: {{ max_trades }}.</p>
     <form action="/trades" method="post" enctype="multipart/form-data" class="entry-form cal-form-grid">
         <label>
             Date
@@ -67,7 +74,21 @@
         </label>
         <label>
             Pair
-            <input type="text" name="pair" placeholder="BTCUSDT" required>
+            <select name="pair" required>
+                {% for item in focus_pairs %}
+                <option value="{{ item }}" {% if pair_filter == item %}selected{% endif %}>
+                    {% if item == 'XAUUSD' %}XAUUSD · Gold{% else %}BTCUSDT · Bitcoin{% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Session
+            <select name="session">
+                {% for item in focus_sessions %}
+                <option value="{{ item }}">{{ item }}</option>
+                {% endfor %}
+            </select>
         </label>
         <label>
             Result

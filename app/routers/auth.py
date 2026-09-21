@@ -18,11 +18,17 @@ def _create_default_profile(db: Session, user: User) -> TradingProfile:
     profile = TradingProfile(
         user_id=user.id,
         name="Main Journal",
-        markets="Crypto",
+        markets="XAU · BTC",
         style="Intraday",
         experience="Developing",
         goal="Track process, not just PnL.",
         starting_balance=0.0,
+        max_trades_per_day=3,
+        session_asia=False,
+        session_london=True,
+        session_newyork=True,
+        focus_xau=True,
+        focus_btc=True,
         is_default=True,
     )
     db.add(profile)
@@ -169,6 +175,58 @@ def update_account(
     return RedirectResponse(url="/account", status_code=303)
 
 
+@router.get("/personal")
+def personal_page(
+    request: Request,
+    user: User = Depends(require_user),
+    profile: TradingProfile = Depends(get_active_profile),
+):
+    return render(
+        "personal.html",
+        template_context(request, user=user, profile=profile, title="Personal"),
+    )
+
+
+@router.post("/personal")
+def update_personal(
+    request: Request,
+    max_trades_per_day: int = Form(3),
+    starting_balance: float = Form(0),
+    session_asia: str | None = Form(None),
+    session_london: str | None = Form(None),
+    session_newyork: str | None = Form(None),
+    focus_xau: str | None = Form(None),
+    focus_btc: str | None = Form(None),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_user),
+    profile: TradingProfile = Depends(get_active_profile),
+):
+    profile.max_trades_per_day = max(1, min(int(max_trades_per_day or 3), 20))
+    profile.starting_balance = starting_balance
+    asia = session_asia is not None
+    london = session_london is not None
+    newyork = session_newyork is not None
+    if not asia and not london and not newyork:
+        london = True
+        newyork = True
+    profile.session_asia = asia
+    profile.session_london = london
+    profile.session_newyork = newyork
+    xau = focus_xau is not None
+    btc = focus_btc is not None
+    if not xau and not btc:
+        xau = True
+        btc = True
+    profile.focus_xau = xau
+    profile.focus_btc = btc
+    profile.markets = " · ".join(
+        part for part, enabled in (("XAU", xau), ("BTC", btc)) if enabled
+    )
+    db.commit()
+    flash(request, "Personal desk saved.", "success")
+    return RedirectResponse(url="/personal", status_code=303)
+
+
 @router.get("/profiles/new")
 def new_profile_form(request: Request, user: User = Depends(require_user)):
     limits = plan_limits(user)
@@ -201,11 +259,16 @@ def create_profile(
     profile = TradingProfile(
         user_id=user.id,
         name=title[:80],
-        markets=markets.strip()[:200] or "Crypto",
+        markets="XAU · BTC",
         style=style.strip()[:80] or "Intraday",
         experience=experience.strip()[:40] or "Developing",
         goal=goal.strip(),
         bio=bio.strip(),
+        max_trades_per_day=3,
+        session_london=True,
+        session_newyork=True,
+        focus_xau=True,
+        focus_btc=True,
         is_default=count == 0,
     )
     db.add(profile)

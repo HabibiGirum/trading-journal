@@ -29,7 +29,13 @@
     <form action="/setup" method="post" class="entry-form cal-form-grid">
         <label>
             Pair
-            <input type="text" name="pair" value="{{ form.pair if form is defined else 'BTCUSDT' }}" required>
+            <select name="pair" required>
+                {% for item in focus_pairs %}
+                <option value="{{ item }}" {% if form is defined and form.pair == item %}selected{% endif %}>
+                    {% if item == 'XAUUSD' %}XAUUSD · Gold{% else %}BTCUSDT · Bitcoin{% endif %}
+                </option>
+                {% endfor %}
+            </select>
         </label>
         <label>
             Daily

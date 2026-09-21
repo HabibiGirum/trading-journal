@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="form-panel auth-panel">
+<section class="form-panel">
     <h2>Add a trade</h2>
-    <p class="form-hint">Profit is a plus number. Loss is a minus number. Then write the lesson.</p>
+    <p class="form-hint">Today {{ today_count }} / {{ max_trades }} trades. Stop when you hit the cap.</p>
     <form action="/trades" method="post" enctype="multipart/form-data" class="entry-form">
         <label>
             Date
@@ -11,7 +11,21 @@
         </label>
         <label>
             Pair
-            <input type="text" name="pair" placeholder="BTCUSDT" required>
+            <select name="pair" required>
+                {% for item in focus_pairs %}
+                <option value="{{ item }}" {% if prefill_pair == item %}selected{% endif %}>
+                    {% if item == 'XAUUSD' %}XAUUSD · Gold{% else %}BTCUSDT · Bitcoin{% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Session
+            <select name="session">
+                {% for item in focus_sessions %}
+                <option value="{{ item }}" {% if loop.first %}selected{% endif %}>{{ item }}</option>
+                {% endfor %}
+            </select>
         </label>
         <label>
             Result

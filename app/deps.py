@@ -63,9 +63,15 @@ def get_active_profile(
         profile = TradingProfile(
             user_id=user.id,
             name="Main Journal",
-            markets="Crypto",
+            markets="XAU · BTC",
             style="Intraday",
             experience="Developing",
+            max_trades_per_day=3,
+            session_asia=False,
+            session_london=True,
+            session_newyork=True,
+            focus_xau=True,
+            focus_btc=True,
             is_default=True,
         )
         db.add(profile)
@@ -83,6 +89,30 @@ def get_active_profile(
     return profile
 
 
+def focus_pairs(profile: TradingProfile | None) -> list[str]:
+    if profile is None:
+        return ["XAUUSD", "BTCUSDT"]
+    pairs: list[str] = []
+    if getattr(profile, "focus_xau", True):
+        pairs.append("XAUUSD")
+    if getattr(profile, "focus_btc", True):
+        pairs.append("BTCUSDT")
+    return pairs or ["XAUUSD", "BTCUSDT"]
+
+
+def focus_sessions(profile: TradingProfile | None) -> list[str]:
+    if profile is None:
+        return ["London", "New York"]
+    sessions: list[str] = []
+    if getattr(profile, "session_asia", False):
+        sessions.append("Asia")
+    if getattr(profile, "session_london", True):
+        sessions.append("London")
+    if getattr(profile, "session_newyork", True):
+        sessions.append("New York")
+    return sessions or ["London"]
+
+
 def template_context(request: Request, **extra):
     user = extra.get("user") or getattr(request.state, "user", None)
     profile = extra.get("profile") or getattr(request.state, "profile", None)
@@ -98,8 +128,14 @@ def template_context(request: Request, **extra):
         "plan": PLANS[plan_id],
         "limits": plan_limits(user),
         "now": datetime.utcnow(),
+        "nav_path": request.url.path or "",
+        "focus_pairs": focus_pairs(profile),
+        "focus_sessions": focus_sessions(profile),
     }
     ctx.update(extra)
+    if ctx.get("profile"):
+        ctx.setdefault("focus_pairs", focus_pairs(ctx["profile"]))
+        ctx.setdefault("focus_sessions", focus_sessions(ctx["profile"]))
     return ctx
 
 

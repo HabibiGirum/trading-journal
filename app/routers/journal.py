@@ -9,7 +9,7 @@ from sqlalchemy import extract, func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..deps import BillingRequired, flash, get_active_profile, require_user, template_context
+from ..deps import BillingRequired, flash, focus_pairs, get_active_profile, require_user, template_context
 from ..models import AnalysisNote, TradeImage, TradeLog, TradingPlan, TradingProfile, User
 from ..plans import plan_limits
 from ..storage import UploadError, delete_file, save_upload
@@ -23,6 +23,25 @@ def _owned_trade(db: Session, trade_id: int, user: User) -> TradeLog | None:
     if not trade or trade.user_id != user.id:
         return None
     return trade
+
+
+def _day_trade_count(db: Session, user: User, profile: TradingProfile, day: date) -> int:
+    return db.scalar(
+        select(func.count())
+        .select_from(TradeLog)
+        .where(TradeLog.user_id == user.id, TradeLog.profile_id == profile.id)
+        .where(TradeLog.trade_date == day)
+    ) or 0
+
+
+def _pair_pnl(db: Session, user: User, profile: TradingProfile, pair: str) -> float:
+    return db.scalar(
+        select(func.coalesce(func.sum(TradeLog.pnl_amount), 0.0)).where(
+            TradeLog.user_id == user.id,
+            TradeLog.profile_id == profile.id,
+            TradeLog.pair == pair,
+        )
+    ) or 0.0
 
 
 def _month_trade_count(db: Session, user: User, day: date) -> int:
@@ -64,6 +83,8 @@ def journey(
         )
     ) or 0
     start_balance = profile.starting_balance or 0.0
+    today_count = _day_trade_count(db, user, profile, date.today())
+    max_trades = profile.max_trades_per_day or 3
 
     return render(
         "dashboard.html",
@@ -78,6 +99,10 @@ def journey(
                 "current_balance": start_balance + total_pnl,
                 "wins": wins,
                 "losses": losses,
+                "xau_pnl": _pair_pnl(db, user, profile, "XAUUSD"),
+                "btc_pnl": _pair_pnl(db, user, profile, "BTCUSDT"),
+                "today_count": today_count,
+                "max_trades": max_trades,
             },
             title="Journey",
         ),
@@ -103,6 +128,7 @@ def calendar_page(
     request: Request,
     year: int | None = None,
     month: int | None = None,
+    pair: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_user),
     profile: TradingProfile = Depends(get_active_profile),
@@ -112,14 +138,20 @@ def calendar_page(
     m = month or today.month
     first_weekday, num_days = cal.monthrange(y, m)
     month_name = cal.month_name[m]
+    pair_filter = (pair or "").strip().upper() or None
+    allowed = focus_pairs(profile)
+    if pair_filter and pair_filter not in allowed:
+        pair_filter = None
 
-    trades = db.scalars(
+    q = (
         select(TradeLog)
         .where(TradeLog.user_id == user.id, TradeLog.profile_id == profile.id)
         .where(extract("year", TradeLog.trade_date) == y)
         .where(extract("month", TradeLog.trade_date) == m)
-        .order_by(TradeLog.trade_date, TradeLog.id)
-    ).all()
+    )
+    if pair_filter:
+        q = q.where(TradeLog.pair == pair_filter)
+    trades = db.scalars(q.order_by(TradeLog.trade_date, TradeLog.id)).all()
 
     day_map: dict[int, list] = {}
     day_pnl: dict[int, float] = {}
@@ -170,6 +202,9 @@ def calendar_page(
             next_year=next_y,
             next_month=next_m,
             today=today,
+            pair_filter=pair_filter,
+            today_count=_day_trade_count(db, user, profile, today),
+            max_trades=profile.max_trades_per_day or 3,
             title="Calendar",
         ),
     )
@@ -179,12 +214,23 @@ def calendar_page(
 def new_trade_form(
     request: Request,
     trade_date: str | None = None,
+    db: Session = Depends(get_db),
     user: User = Depends(require_user),
     profile: TradingProfile = Depends(get_active_profile),
 ):
+    pairs = focus_pairs(profile)
     return render(
         "trade_form.html",
-        template_context(request, user=user, profile=profile, prefill_date=trade_date or "", title="Add trade"),
+        template_context(
+            request,
+            user=user,
+            profile=profile,
+            prefill_date=trade_date or date.today().isoformat(),
+            prefill_pair=pairs[0],
+            today_count=_day_trade_count(db, user, profile, date.today()),
+            max_trades=profile.max_trades_per_day or 3,
+            title="Add trade",
+        ),
     )
 
 
@@ -208,6 +254,17 @@ async def create_trade(
     if cap is not None and _month_trade_count(db, user, day) >= cap:
         raise BillingRequired("This month's trade limit is reached. Upgrade to keep logging.")
 
+    max_day = profile.max_trades_per_day or 3
+    if _day_trade_count(db, user, profile, day) >= max_day:
+        flash(request, f"Daily max is {max_day} trades. Stop for the day.", "error")
+        return RedirectResponse(url="/trades/new", status_code=303)
+
+    pair_clean = pair.strip().upper()
+    allowed = focus_pairs(profile)
+    if pair_clean not in allowed:
+        flash(request, "Pick XAU or BTC from your personal desk.", "error")
+        return RedirectResponse(url="/trades/new", status_code=303)
+
     result = outcome.strip().lower()
     if result not in {"win", "loss", "breakeven"}:
         result = "win" if pnl_amount >= 0 else "loss"
@@ -220,7 +277,7 @@ async def create_trade(
         user_id=user.id,
         profile_id=profile.id,
         trade_date=day,
-        pair=pair.strip().upper(),
+        pair=pair_clean,
         market_type=market_type.strip() or "Futures",
         session=session.strip() or "Day",
         pnl_amount=pnl_amount,

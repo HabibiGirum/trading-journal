@@ -5,46 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if title and title != app_name %}{{ title }} · {{ app_name }}{% else %}{{ app_name }}{% endif %}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+    <script>
+        (function () {
+            document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+        })();
+    </script>
 </head>
-<body>
-    <header class="site-header">
-        <div>
-            <p class="eyebrow">{{ app_name }}</p>
-            <h1>Trading Journal</h1>
-            <p class="subtitle">
-                {% if user %}
-                    Start balance, profit, lessons, and a setup check before you click.
-                {% else %}
-                    Track your start balance, profit, wins, and the mistake when you lose.
-                {% endif %}
-            </p>
-        </div>
-        <nav class="nav-links">
-            {% if user %}
-                <a href="/journey">Journey</a>
-                <a href="/setup">Setup</a>
-                <a href="/trades/new">Add trade</a>
-                <a href="/account">Account</a>
-                <form action="/logout" method="post" class="inline-form">
+<body class="{% if user %}has-sidebar{% endif %}">
+    <div class="{% if user %}app-shell{% else %}guest-shell{% endif %}">
+        {% if user %}
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <p class="eyebrow">{{ app_name }}</p>
+                <strong>XAU · BTC desk</strong>
+            </div>
+            <nav class="sidebar-nav">
+                {% set path = nav_path or '' %}
+                <a href="/journey" class="{% if path.startswith('/journey') %}is-active{% endif %}">Journey</a>
+                <a href="/calendar" class="{% if path.startswith('/calendar') %}is-active{% endif %}">Calendar</a>
+                <a href="/setup" class="{% if path.startswith('/setup') %}is-active{% endif %}">Setup</a>
+                <a href="/trades/new" class="{% if path.startswith('/trades') %}is-active{% endif %}">Add trade</a>
+                <a href="/personal" class="{% if path.startswith('/personal') %}is-active{% endif %}">Personal</a>
+                <a href="/account" class="{% if path.startswith('/account') %}is-active{% endif %}">Account</a>
+            </nav>
+            <div class="sidebar-foot">
+                <button type="button" class="theme-toggle" data-theme-toggle>Light mode</button>
+                <p class="sidebar-user">{{ user.display_name }}</p>
+                <form action="/logout" method="post">
                     <button type="submit" class="nav-ghost">Sign out</button>
                 </form>
-            {% else %}
-                <a href="/login">Sign in</a>
-                <a href="/register">Create account</a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <div class="workspace">
+            {% if not user %}
+            <header class="site-header">
+                <div>
+                    <p class="eyebrow">{{ app_name }}</p>
+                    <h1>XAU · BTC journal</h1>
+                    <p class="subtitle">Start balance, profit, calendar, and a setup check before you click.</p>
+                </div>
+                <nav class="nav-links">
+                    <button type="button" class="theme-toggle nav-ghost" data-theme-toggle>Light mode</button>
+                    <a href="/login">Sign in</a>
+                    <a href="/register">Create account</a>
+                </nav>
+            </header>
             {% endif %}
-        </nav>
-    </header>
 
-    {% if flash_messages %}
-    <div class="flash-wrap">
-        {% for item in flash_messages %}
-            <p class="flash flash-{{ item.category }}">{{ item.message }}</p>
-        {% endfor %}
+            {% if flash_messages %}
+            <div class="flash-wrap {% if user %}in-workspace{% endif %}">
+                {% for item in flash_messages %}
+                    <p class="flash flash-{{ item.category }}">{{ item.message }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <main class="page">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
     </div>
-    {% endif %}
-
-    <main class="page">
-        {% block content %}{% endblock %}
-    </main>
+    <script>
+        (function () {
+            function label(theme) { return theme === "dark" ? "Light mode" : "Dark mode"; }
+            function apply(theme) {
+                document.documentElement.setAttribute("data-theme", theme);
+                localStorage.setItem("theme", theme);
+                document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+                    btn.textContent = label(theme);
+                });
+            }
+            apply(localStorage.getItem("theme") || "dark");
+            document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    apply(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

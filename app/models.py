@@ -41,6 +41,12 @@ class TradingProfile(Base):
     goal: Mapped[str] = mapped_column(Text, nullable=False, default="")
     bio: Mapped[str] = mapped_column(Text, nullable=False, default="")
     starting_balance: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    max_trades_per_day: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    session_asia: Mapped[bool] = mapped_column(default=False, nullable=False)
+    session_london: Mapped[bool] = mapped_column(default=True, nullable=False)
+    session_newyork: Mapped[bool] = mapped_column(default=True, nullable=False)
+    focus_xau: Mapped[bool] = mapped_column(default=True, nullable=False)
+    focus_btc: Mapped[bool] = mapped_column(default=True, nullable=False)
     is_default: Mapped[bool] = mapped_column(default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

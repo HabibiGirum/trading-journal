@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..bias import analyze_setup
 from ..database import get_db
-from ..deps import get_active_profile, require_user, template_context
+from ..deps import focus_pairs, get_active_profile, require_user, template_context
 from ..models import BiasCheck, TradingProfile, User
 from ..templating import render
 
@@ -38,14 +38,22 @@ def setup_form(
     ).all()
     return render(
         "setup.html",
-        template_context(request, user=user, profile=profile, history=history, result=None, title="Setup"),
+        template_context(
+            request,
+            user=user,
+            profile=profile,
+            history=history,
+            result=None,
+            form={"pair": focus_pairs(profile)[0]},
+            title="Setup",
+        ),
     )
 
 
 @router.post("/setup")
 def run_setup(
     request: Request,
-    pair: str = Form("BTCUSDT"),
+    pair: str = Form("XAUUSD"),
     daily: str = Form(...),
     h4: str = Form(...),
     h1: str = Form("range"),
@@ -73,7 +81,7 @@ def run_setup(
     check = BiasCheck(
         user_id=user.id,
         profile_id=profile.id,
-        pair=pair.strip().upper() or "BTCUSDT",
+        pair=pair.strip().upper() or focus_pairs(profile)[0],
         daily=daily,
         h4=h4,
         h1=h1,

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel">
+    <h2>Personal desk</h2>
+    <p class="form-hint">Set how many trades you allow per day, when you trade, and which markets you sit on. The journal will stop you after the daily max.</p>
+    <form action="/personal" method="post" class="entry-form">
+        <label>
+            Max trades per day
+            <input type="number" name="max_trades_per_day" min="1" max="20" value="{{ profile.max_trades_per_day or 3 }}" required>
+        </label>
+        <label>
+            Start balance
+            <input type="number" step="0.01" name="starting_balance" value="{{ "%.2f"|format(profile.starting_balance or 0) }}" required>
+        </label>
+        <fieldset class="check-set">
+            <legend>When I take trades</legend>
+            <label class="check-row"><input type="checkbox" name="session_asia" {% if profile.session_asia %}checked{% endif %}> Asia</label>
+            <label class="check-row"><input type="checkbox" name="session_london" {% if profile.session_london %}checked{% endif %}> London</label>
+            <label class="check-row"><input type="checkbox" name="session_newyork" {% if profile.session_newyork %}checked{% endif %}> New York</label>
+        </fieldset>
+        <fieldset class="check-set">
+            <legend>Markets I trade</legend>
+            <label class="check-row"><input type="checkbox" name="focus_xau" {% if profile.focus_xau %}checked{% endif %}> XAU (Gold)</label>
+            <label class="check-row"><input type="checkbox" name="focus_btc" {% if profile.focus_btc %}checked{% endif %}> BTC</label>
+        </fieldset>
+        <button type="submit">Save rules</button>
+    </form>
+</section>
+{% endblock %}
