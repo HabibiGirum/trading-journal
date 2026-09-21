@@ -45,15 +45,22 @@ docker compose up --build
 
 Uploads persist in the `uploads` volume.
 
-### Render / Railway / Fly
+## Keep data on Render
 
-1. Connect this repo.
-2. Use the Dockerfile or the Procfile.
-3. Add environment variables from `.env.example`.
-4. Attach a PostgreSQL database and set `DATABASE_URL`.
-5. Set `SESSION_HTTPS_ONLY=true` and `ALLOWED_HOSTS` to your domain.
-6. Set `PUBLIC_BASE_URL` to `https://your-domain`.
-7. Persist `/data/uploads` (or your `UPLOAD_DIR`) on a volume.
+SQLite inside the web service is deleted on every deploy. Use Render Postgres.
+
+1. In Render: **New → PostgreSQL**. Create it (same region as the web service).
+2. Open the database → **Connections** → copy **Internal Database URL**.
+3. Open the web service → **Environment**.
+4. Set `DATABASE_URL` to that Postgres URL.
+5. Remove any `DATABASE_URL` value that starts with `sqlite`.
+6. **Manual Deploy** → Deploy latest commit.
+
+Accounts, trades, start balance, and setup checks then stay after deploys.
+
+Screenshots still need a disk: web service → **Disks** → mount path `/data` (paid instance). Without a disk, only the database is permanent.
+
+If data was already lost, it cannot be restored. New trades after this change will persist.
 
 ### Stripe (live subscriptions)
 

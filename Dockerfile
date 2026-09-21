@@ -15,7 +15,6 @@ COPY static ./static
 
 ENV PYTHONUNBUFFERED=1
 ENV UPLOAD_DIR=/data/uploads
-ENV DATABASE_URL=sqlite:////data/trading_journal.db
 ENV PORT=8000
 
 RUN mkdir -p /data/uploads ./uploads

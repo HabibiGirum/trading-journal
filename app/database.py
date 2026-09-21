@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import fcntl
+import os
 from pathlib import Path
 
 from sqlalchemy import create_engine, event, inspect, text
@@ -18,9 +19,12 @@ SessionLocal = None
 
 def _normalize_db_url(url: str) -> str:
     if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql+psycopg2://", 1)
-    if url.startswith("postgresql://") and "+psycopg" not in url:
-        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif url.startswith("postgresql://") and "+psycopg" not in url:
+        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    if url.startswith("postgresql") and "sslmode=" not in url and os.getenv("RENDER"):
+        joiner = "&" if "?" in url else "?"
+        url = f"{url}{joiner}sslmode=require"
     return url
 
 
