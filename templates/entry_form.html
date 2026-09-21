@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel">
+    <h2>Post a good entry</h2>
+    <p class="form-hint">Save the screenshot and why the entry was valid. This is the library you review before the next session.</p>
+    <form action="/entries" method="post" enctype="multipart/form-data" class="entry-form">
+        <label>
+            Title
+            <input type="text" name="title" placeholder="BTC 15m breakout retest" required>
+        </label>
+        <label>
+            Pair
+            <input type="text" name="pair" placeholder="BTCUSDT" required>
+        </label>
+        <label>
+            Direction
+            <select name="direction">
+                <option value="long">Long</option>
+                <option value="short">Short</option>
+            </select>
+        </label>
+        <label>
+            Market condition
+            <input type="text" name="market_condition" placeholder="Trend / range / high news vol" value="Trend">
+        </label>
+        <label class="span-full">
+            Why this entry is good
+            <textarea name="why_good" rows="6" placeholder="Location, trigger, invalidation, risk" required></textarea>
+        </label>
+        <label>
+            Tags
+            <input type="text" name="tags" placeholder="FVG, liquidity sweep, session open">
+        </label>
+        <label>
+            Chart
+            <input type="file" name="chart_image" accept=".png,.jpg,.jpeg,.webp">
+        </label>
+        <button type="submit">Save entry</button>
+    </form>
+</section>
+{% endblock %}

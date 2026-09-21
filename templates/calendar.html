@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Month navigation & stats -->
+<section class="cal-header">
+    <a class="cal-nav-btn" href="/calendar?year={{ prev_year }}&month={{ prev_month }}">&larr; Prev</a>
+    <div class="cal-title-block">
+        <h2 class="cal-month-title">{{ month_name }} {{ year }}</h2>
+        <div class="cal-month-stats">
+            <span class="{% if month_total >= 0 %}profit{% else %}loss{% endif %}">
+                Month P&L: ${{ "%.2f"|format(month_total) }}
+            </span>
+            <span class="cal-stat-pill win-pill">{{ wins }} Win{{ "s" if wins != 1 }}</span>
+            <span class="cal-stat-pill loss-pill">{{ losses }} Loss{{ "es" if losses != 1 else "" }}</span>
+        </div>
+    </div>
+    <a class="cal-nav-btn" href="/calendar?year={{ next_year }}&month={{ next_month }}">Next &rarr;</a>
+</section>
+
+<!-- Calendar grid -->
+<section class="cal-grid-wrap">
+    <div class="cal-grid">
+        <div class="cal-dow">Mon</div>
+        <div class="cal-dow">Tue</div>
+        <div class="cal-dow">Wed</div>
+        <div class="cal-dow">Thu</div>
+        <div class="cal-dow">Fri</div>
+        <div class="cal-dow cal-weekend">Sat</div>
+        <div class="cal-dow cal-weekend">Sun</div>
+
+        {% for week in weeks %}
+            {% for cell in week %}
+                {% if cell is none %}
+                    <div class="cal-cell cal-empty"></div>
+                {% else %}
+                    <div class="cal-cell {% if cell.is_today %}cal-today{% endif %} {% if cell.has_trades %}{% if cell.pnl > 0 %}cal-win{% elif cell.pnl < 0 %}cal-loss{% else %}cal-neutral{% endif %}{% endif %}">
+                        <div class="cal-day-num">{{ cell.day }}</div>
+                        {% if cell.has_trades %}
+                            <div class="cal-pnl {% if cell.pnl >= 0 %}profit{% else %}loss{% endif %}">
+                                ${{ "%.2f"|format(cell.pnl) }}
+                            </div>
+                            <div class="cal-trades-list">
+                                {% for t in cell.trades %}
+                                    <a href="/trades/{{ t.id }}" class="cal-trade-chip {% if t.pnl_amount >= 0 %}chip-win{% else %}chip-loss{% endif %}">
+                                        {{ t.pair }}
+                                        <span>${{ "%.0f"|format(t.pnl_amount) }}</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <a href="/trades/new?trade_date={{ year }}-{{ '%02d'|format(month) }}-{{ '%02d'|format(cell.day) }}" class="cal-add-btn" title="Add trade for this day">+</a>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Quick-add trade from calendar -->
+<section class="form-panel cal-quick-add">
+    <h2>Quick Add Trade</h2>
+    <form action="/trades" method="post" enctype="multipart/form-data" class="entry-form cal-form-grid">
+        <label>
+            Date
+            <input type="date" name="trade_date" value="{{ today }}" required>
+        </label>
+        <label>
+            Pair
+            <input type="text" name="pair" placeholder="BTCUSDT" required>
+        </label>
+        <label>
+            Market
+            <select name="market_type" required>
+                <option value="Futures">Futures</option>
+                <option value="Spot">Spot</option>
+                <option value="Options">Options</option>
+            </select>
+        </label>
+        <label>
+            Session
+            <input type="text" name="session" placeholder="London / New York / Asia" required>
+        </label>
+        <label>
+            PnL ($)
+            <input type="number" step="0.01" name="pnl_amount" placeholder="150.75 or -90.50" required>
+        </label>
+        <label>
+            Outcome
+            <select name="outcome" required>
+                <option value="win">Win</option>
+                <option value="loss">Loss</option>
+                <option value="breakeven">Breakeven</option>
+            </select>
+        </label>
+        <label class="span-full">
+            Notes
+            <textarea name="notes" rows="3" placeholder="Quick notes about this trade"></textarea>
+        </label>
+        <label class="span-full">
+            Chart Screenshot
+            <input type="file" name="chart_image" accept=".png,.jpg,.jpeg,.webp">
+        </label>
+        <button type="submit" class="span-full">Save Trade</button>
+    </form>
+</section>
+
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel">
+    <h2>Market condition</h2>
+    <form action="/conditions" method="post" class="entry-form">
+        <label>
+            Date
+            <input type="date" name="note_date" value="{{ today }}" required>
+        </label>
+        <label>
+            Market
+            <input type="text" name="market" placeholder="BTC / DXY / NQ" required>
+        </label>
+        <label>
+            Trend
+            <select name="trend" required>
+                <option>Bullish</option>
+                <option>Bearish</option>
+                <option>Range</option>
+                <option>Transition</option>
+            </select>
+        </label>
+        <label>
+            Volatility
+            <select name="volatility" required>
+                <option>Low</option>
+                <option>Normal</option>
+                <option>High</option>
+                <option>News-driven</option>
+            </select>
+        </label>
+        <label>
+            Session
+            <input type="text" name="session" placeholder="Asia / London / New York" value="London">
+        </label>
+        <label class="span-full">
+            Summary
+            <textarea name="summary" rows="6" placeholder="Bias, levels, what you will not trade" required></textarea>
+        </label>
+        <label class="span-full">
+            Catalysts
+            <textarea name="catalysts" rows="3" placeholder="CPI, FOMC, unlock, ETF flow"></textarea>
+        </label>
+        <button type="submit">Save condition</button>
+    </form>
+</section>
+{% endblock %}

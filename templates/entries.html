@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel-head page-head">
+    <div>
+        <h2>Good entries</h2>
+        <p class="muted">Only keep setups you would take again. Chart, condition, and the reason.</p>
+    </div>
+    <a class="button-link" href="/entries/new">Post entry</a>
+</section>
+
+{% if entries %}
+<div class="analysis-grid">
+    {% for item in entries %}
+    <article class="analysis-card">
+        {% if item.image_path %}
+        <img src="/media/{{ item.image_path }}" alt="{{ item.title }}">
+        {% endif %}
+        <div class="analysis-body">
+            <h3>{{ item.title }}</h3>
+            <p>
+                <span class="trade-badge badge-market">{{ item.pair }}</span>
+                <span class="trade-badge badge-session">{{ item.direction }}</span>
+                <span class="trade-badge badge-be">{{ item.market_condition }}</span>
+            </p>
+            <p>{{ item.why_good }}</p>
+            {% if item.tags %}<p class="muted">{{ item.tags }}</p>{% endif %}
+            <form action="/entries/{{ item.id }}/delete" method="post">
+                <button type="submit" class="btn-delete" onclick="return confirm('Remove this entry?')">Remove</button>
+            </form>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">No good entries yet. Post the first A+ setup for this profile.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel">
+    <h2>Upload a PDF</h2>
+    <p class="form-hint">Playbooks, course notes, session recaps. Max {{ limits.pdfs if limits.pdfs is not none else "unlimited" }} on this plan.</p>
+    <form action="/library" method="post" enctype="multipart/form-data" class="entry-form">
+        <label>
+            Title
+            <input type="text" name="title" placeholder="ICT 2022 notes" required>
+        </label>
+        <label>
+            Category
+            <select name="category">
+                <option>Playbook</option>
+                <option>Psychology</option>
+                <option>Risk</option>
+                <option>Recap</option>
+                <option>Other</option>
+            </select>
+        </label>
+        <label class="span-full">
+            Notes
+            <textarea name="notes" rows="4" placeholder="Why this stays in the library"></textarea>
+        </label>
+        <label class="span-full">
+            PDF
+            <input type="file" name="pdf_file" accept=".pdf,application/pdf" required>
+        </label>
+        <button type="submit">Save PDF</button>
+    </form>
+</section>
+{% endblock %}

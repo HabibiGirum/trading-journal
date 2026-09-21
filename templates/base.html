@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if title and title != app_name %}{{ title }} · {{ app_name }}{% else %}{{ app_name }}{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div>
+            <p class="eyebrow">{{ app_name }}</p>
+            <h1>{% if user and profile %}{{ profile.name }}{% else %}Trading Journey{% endif %}</h1>
+            <p class="subtitle">
+                {% if user %}
+                    {{ user.display_name }} · {{ plan.name }} plan
+                    {% if profile %} · {{ profile.markets }}{% endif %}
+                {% else %}
+                    Track good entries, market conditions, lessons, and the path you are actually trading.
+                {% endif %}
+            </p>
+        </div>
+        <nav class="nav-links">
+            {% if user %}
+                <a href="/journey">Journey</a>
+                <a href="/calendar">Calendar</a>
+                <a href="/entries">Entries</a>
+                <a href="/conditions">Markets</a>
+                <a href="/library">Learn</a>
+                <a href="/billing">Plan</a>
+                <a href="/account">Account</a>
+                <form action="/logout" method="post" class="inline-form">
+                    <button type="submit" class="nav-ghost">Sign out</button>
+                </form>
+            {% else %}
+                <a href="/pricing">Pricing</a>
+                <a href="/login">Sign in</a>
+                <a href="/register">Create account</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    {% if user and profiles and profiles|length > 1 %}
+    <div class="profile-bar">
+        <span>Active profile</span>
+        {% for item in profiles %}
+            <form action="/profiles/{{ item.id }}/activate" method="post" class="inline-form">
+                <button type="submit" class="profile-chip {% if profile and item.id == profile.id %}is-active{% endif %}">{{ item.name }}</button>
+            </form>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if flash_messages %}
+    <div class="flash-wrap">
+        {% for item in flash_messages %}
+            <p class="flash flash-{{ item.category }}">{{ item.message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

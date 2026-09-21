@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel auth-panel">
+    <h2>Create your account</h2>
+    <p class="form-hint">One profile to start. Upgrade when you want more desks, unlimited logs, and a PDF library.</p>
+    <form action="/register" method="post" class="entry-form">
+        <label>
+            Display name
+            <input type="text" name="display_name" placeholder="Your name" required minlength="2">
+        </label>
+        <label>
+            Email
+            <input type="email" name="email" required autocomplete="email">
+        </label>
+        <label>
+            Password
+            <input type="password" name="password" required minlength="8" autocomplete="new-password">
+        </label>
+        <button type="submit">Create account</button>
+    </form>
+    <p class="form-hint">Already have an account? <a class="text-link" href="/login">Sign in</a></p>
+</section>
+{% endblock %}

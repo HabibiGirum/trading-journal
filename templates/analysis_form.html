@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel">
+    <h2>Add Analysis & Pattern</h2>
+    <form action="/analysis" method="post" enctype="multipart/form-data" class="entry-form">
+        <label>
+            Title
+            <input type="text" name="title" placeholder="ETH short setup after liquidity sweep" required>
+        </label>
+        <label>
+            Market
+            <input type="text" name="market" placeholder="ETHUSDT" required>
+        </label>
+        <label>
+            Bias
+            <input type="text" name="bias" placeholder="Bullish / Bearish / Neutral" required>
+        </label>
+        <label>
+            Pattern Tags
+            <input type="text" name="pattern_tags" placeholder="liquidity sweep, breaker, fair value gap">
+        </label>
+        <label>
+            Lesson / Analysis
+            <textarea name="lesson" rows="7" placeholder="Write your setup review, market idea, confirmation, and lesson learned" required></textarea>
+        </label>
+        <label>
+            Chart Image
+            <input type="file" name="chart_image" accept=".png,.jpg,.jpeg,.webp">
+        </label>
+        <button type="submit">Save Analysis</button>
+    </form>
+</section>
+{% endblock %}

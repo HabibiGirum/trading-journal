@@ -1,0 +1,41 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "false"
+      SECRET_KEY: ${SECRET_KEY:-change-this-in-production-to-a-long-random-value}
+      DATABASE_URL: postgresql://tradepath:tradepath@db:5432/tradepath
+      UPLOAD_DIR: /data/uploads
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      SESSION_HTTPS_ONLY: ${SESSION_HTTPS_ONLY:-false}
+      ENABLE_DEV_BILLING: ${ENABLE_DEV_BILLING:-false}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_TRADER: ${STRIPE_PRICE_TRADER:-}
+      STRIPE_PRICE_PRO: ${STRIPE_PRICE_PRO:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tradepath
+      POSTGRES_PASSWORD: tradepath
+      POSTGRES_DB: tradepath
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tradepath"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  uploads:
+  pgdata:

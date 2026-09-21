@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel">
+    <h2>Add Trading Plan</h2>
+    <form action="/plans" method="post" class="entry-form">
+        <label>
+            Plan Title
+            <input type="text" name="title" placeholder="Weekly BTC Futures Plan" required>
+        </label>
+        <label>
+            Setup Name
+            <input type="text" name="setup_name" placeholder="Breakout Retest" required>
+        </label>
+        <label>
+            Market Bias
+            <input type="text" name="market_bias" placeholder="Bullish / Bearish / Range" required>
+        </label>
+        <label>
+            Risk Rules
+            <textarea name="risk_rules" rows="5" placeholder="Max risk per trade, daily loss limit, leverage rules" required></textarea>
+        </label>
+        <label>
+            Execution Checklist
+            <textarea name="execution_checklist" rows="6" placeholder="Confluences, entry trigger, invalidation, take-profit plan" required></textarea>
+        </label>
+        <button type="submit">Save Plan</button>
+    </form>
+</section>
+{% endblock %}

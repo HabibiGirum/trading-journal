@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel-head page-head">
+    <div>
+        <h2>Market conditions</h2>
+        <p class="muted">What the tape was doing — trend, volatility, session, catalysts.</p>
+    </div>
+    <a class="button-link" href="/conditions/new">Add note</a>
+</section>
+
+{% if conditions %}
+<div class="card-list">
+    {% for item in conditions %}
+    <article class="note-card">
+        <h3>{{ item.market }} · {{ item.note_date }}</h3>
+        <p>
+            <span class="trade-badge badge-market">{{ item.trend }}</span>
+            <span class="trade-badge badge-session">{{ item.volatility }}</span>
+            <span class="trade-badge badge-be">{{ item.session }}</span>
+        </p>
+        <p>{{ item.summary }}</p>
+        {% if item.catalysts %}<p class="muted">{{ item.catalysts }}</p>{% endif %}
+        <form action="/conditions/{{ item.id }}/delete" method="post">
+            <button type="submit" class="btn-delete" onclick="return confirm('Remove this note?')">Remove</button>
+        </form>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">No market notes yet. Write the condition before you look for entries.</p>
+{% endif %}
+{% endblock %}

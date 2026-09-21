@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel">
+    <h2>New trading profile</h2>
+    <p class="form-hint">A profile is one desk: crypto, FX, indices — keep the journals separate. This plan allows {{ max_profiles }}.</p>
+    <form action="/profiles" method="post" class="entry-form">
+        <label>
+            Profile name
+            <input type="text" name="name" placeholder="BTC Futures desk" required>
+        </label>
+        <label>
+            Markets
+            <input type="text" name="markets" placeholder="Crypto / FX / Indices" value="Crypto">
+        </label>
+        <label>
+            Style
+            <input type="text" name="style" placeholder="Scalp / Intraday / Swing" value="Intraday">
+        </label>
+        <label>
+            Experience
+            <select name="experience">
+                <option>Developing</option>
+                <option>Consistent</option>
+                <option>Professional</option>
+            </select>
+        </label>
+        <label>
+            Goal
+            <textarea name="goal" rows="3" placeholder="What this desk is for this quarter"></textarea>
+        </label>
+        <label>
+            Notes
+            <textarea name="bio" rows="4" placeholder="Risk rules unique to this profile"></textarea>
+        </label>
+        <button type="submit">Create profile</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="content-grid">
+    <div class="form-panel">
+        <h2>Profile</h2>
+        <form action="/account" method="post" class="entry-form">
+            <label>
+                Display name
+                <input type="text" name="display_name" value="{{ user.display_name }}" required>
+            </label>
+            <label>
+                Email
+                <input type="email" value="{{ user.email }}" disabled>
+            </label>
+            <p class="form-hint">Plan: {{ plan.name }} · Status: {{ user.subscription_status }}</p>
+            <button type="submit">Save</button>
+        </form>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Trading profiles</h2>
+            <a class="button-link" href="/profiles/new">New profile</a>
+        </div>
+        <p class="form-hint">{{ plan.name }} includes {{ limits.profiles }} profile{{ "s" if limits.profiles != 1 }}.</p>
+        <div class="card-list">
+            {% for item in profiles %}
+            <article class="note-card">
+                <h3>{{ item.name }}{% if item.is_default %} · default{% endif %}</h3>
+                <p><strong>Markets:</strong> {{ item.markets }}</p>
+                <p><strong>Style:</strong> {{ item.style }}</p>
+                <p><strong>Experience:</strong> {{ item.experience }}</p>
+                {% if item.goal %}<p>{{ item.goal }}</p>{% endif %}
+                <div class="row-actions">
+                    <form action="/profiles/{{ item.id }}/activate" method="post" class="inline-form">
+                        <button type="submit" class="cal-nav-btn">Use this desk</button>
+                    </form>
+                    {% if profiles|length > 1 %}
+                    <form action="/profiles/{{ item.id }}/delete" method="post" class="inline-form">
+                        <button type="submit" class="btn-delete" onclick="return confirm('Remove this profile? Trades stay in the database but leave this desk.')">Remove</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

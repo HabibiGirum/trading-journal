@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="stats-grid">
+    <article class="stat-card">
+        <span>Total PnL</span>
+        <strong class="{% if stats.total_pnl >= 0 %}profit{% else %}loss{% endif %}">${{ "%.2f"|format(stats.total_pnl) }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Trades</span>
+        <strong>{{ stats.trade_count }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Green days</span>
+        <strong>{{ stats.green_days }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Red days</span>
+        <strong>{{ stats.red_days }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Best / worst</span>
+        <strong>${{ "%.2f"|format(stats.best_day) }} / ${{ "%.2f"|format(stats.worst_day) }}</strong>
+    </article>
+</section>
+
+<section class="content-grid">
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Journey</h2>
+            <a class="button-link" href="/trades/new">Add trade</a>
+        </div>
+        {% if timeline %}
+        <ol class="timeline">
+            {% for item in timeline %}
+            <li>
+                <a href="{{ item.href }}">
+                    <span class="timeline-kind">{{ item.kind }}</span>
+                    <strong>{{ item.title }}</strong>
+                    <span class="muted">{{ item.when }} · {{ item.detail }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p class="empty-state">Your journey is empty. Log a trade, post a good entry, or write today's market condition.</p>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>This desk</h2>
+            <a class="button-link" href="/account">Profiles</a>
+        </div>
+        <article class="note-card">
+            <h3>{{ profile.name }}</h3>
+            <p><strong>Markets:</strong> {{ profile.markets }}</p>
+            <p><strong>Style:</strong> {{ profile.style }}</p>
+            <p><strong>Experience:</strong> {{ profile.experience }}</p>
+            {% if profile.goal %}<p>{{ profile.goal }}</p>{% endif %}
+            <p class="form-hint">Plan {{ plan.name }} · {{ limits.profiles }} profile slot{{ "s" if limits.profiles != 1 }} ·
+                {% if limits.pdfs == 0 %}PDFs locked{% elif limits.pdfs is none %}unlimited PDFs{% else %}{{ limits.pdfs }} PDFs{% endif %}
+            </p>
+        </article>
+    </div>
+</section>
+
+<section class="content-grid">
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Daily trade log</h2>
+            <a class="button-link" href="/calendar">Calendar</a>
+        </div>
+        {% if trade_logs %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Pair</th>
+                        <th>Market</th>
+                        <th>Session</th>
+                        <th>Outcome</th>
+                        <th>PnL</th>
+                        <th>Images</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trade in trade_logs %}
+                    <tr>
+                        <td><a href="/trades/{{ trade.id }}" class="trade-row-link">{{ trade.trade_date }}</a></td>
+                        <td><a href="/trades/{{ trade.id }}" class="trade-row-link">{{ trade.pair }}</a></td>
+                        <td>{{ trade.market_type }}</td>
+                        <td>{{ trade.session }}</td>
+                        <td>
+                            <span class="trade-badge {{ 'badge-win' if trade.outcome == 'win' else ('badge-loss' if trade.outcome == 'loss' else 'badge-be') }}">
+                                {{ trade.outcome|upper }}
+                            </span>
+                        </td>
+                        <td class="{% if trade.pnl_amount >= 0 %}profit{% else %}loss{% endif %}">
+                            ${{ "%.2f"|format(trade.pnl_amount) }}
+                        </td>
+                        <td>
+                            <a href="/trades/{{ trade.id }}" class="img-link">{{ trade.images|length }} img</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-state">No trades yet on this profile.</p>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Trading plans</h2>
+            <a class="button-link" href="/plans/new">New plan</a>
+        </div>
+        {% if plans %}
+            <div class="card-list">
+                {% for item in plans %}
+                <article class="note-card">
+                    <h3>{{ item.title }}</h3>
+                    <p><strong>Setup:</strong> {{ item.setup_name }}</p>
+                    <p><strong>Bias:</strong> {{ item.market_bias }}</p>
+                    <p><strong>Risk:</strong> {{ item.risk_rules }}</p>
+                    <p><strong>Checklist:</strong> {{ item.execution_checklist }}</p>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+        <p class="empty-state">Save the rules for this desk before the next session.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h2>Good entries</h2>
+        <a class="button-link" href="/entries/new">Post entry</a>
+    </div>
+    {% if entries %}
+    <div class="analysis-grid">
+        {% for item in entries %}
+        <article class="analysis-card">
+            {% if item.image_path %}
+            <img src="/media/{{ item.image_path }}" alt="{{ item.title }}">
+            {% endif %}
+            <div class="analysis-body">
+                <h3>{{ item.title }}</h3>
+                <p><strong>{{ item.pair }}</strong> · {{ item.direction }} · {{ item.market_condition }}</p>
+                <p>{{ item.why_good }}</p>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">Post A+ entries you want to repeat.</p>
+    {% endif %}
+</section>
+
+<section class="content-grid">
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Market conditions</h2>
+            <a class="button-link" href="/conditions/new">Add note</a>
+        </div>
+        {% if conditions %}
+            <div class="card-list">
+                {% for item in conditions %}
+                <article class="note-card">
+                    <h3>{{ item.market }} · {{ item.note_date }}</h3>
+                    <p><strong>Trend:</strong> {{ item.trend }} · <strong>Vol:</strong> {{ item.volatility }}</p>
+                    <p>{{ item.summary }}</p>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+        <p class="empty-state">Write the tape before you trade it.</p>
+        {% endif %}
+    </div>
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Learning PDFs</h2>
+            <a class="button-link" href="/library/new">Upload PDF</a>
+        </div>
+        {% if pdfs %}
+            <div class="card-list">
+                {% for item in pdfs %}
+                <article class="note-card">
+                    <h3>{{ item.title }}</h3>
+                    <p class="muted">{{ item.category }}</p>
+                    <a class="text-link" href="/media/{{ item.filename }}" target="_blank" rel="noopener">Open PDF</a>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+        <p class="empty-state">Keep playbooks next to the journal. Trader and Pro unlock uploads.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <h2>Pattern library</h2>
+        <a class="button-link" href="/analysis/new">Upload analysis</a>
+    </div>
+    {% if analyses %}
+    <div class="analysis-grid">
+        {% for item in analyses %}
+        <article class="analysis-card">
+            {% if item.image_path %}
+            <img src="/media/{{ item.image_path }}" alt="{{ item.title }}">
+            {% endif %}
+            <div class="analysis-body">
+                <h3>{{ item.title }}</h3>
+                <p><strong>Market:</strong> {{ item.market }}</p>
+                <p><strong>Bias:</strong> {{ item.bias }}</p>
+                <p><strong>Patterns:</strong> {{ item.pattern_tags or "Not specified" }}</p>
+                <p>{{ item.lesson }}</p>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">Upload chart screenshots and the lesson attached to them.</p>
+    {% endif %}
+</section>
+{% endblock %}

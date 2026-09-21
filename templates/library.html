@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel-head page-head">
+    <div>
+        <h2>Learning library</h2>
+        <p class="muted">PDFs you study: playbooks, psychology, recaps. Private to your account.</p>
+    </div>
+    <a class="button-link" href="/library/new">Upload PDF</a>
+</section>
+
+{% if limits.pdfs == 0 %}
+<p class="flash flash-info">PDF uploads are on Trader and Pro. You can still browse this page after you subscribe.</p>
+{% endif %}
+
+{% if resources %}
+<div class="table-wrap panel">
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in resources %}
+            <tr>
+                <td><a class="trade-row-link" href="/media/{{ item.filename }}" target="_blank" rel="noopener">{{ item.title }}</a></td>
+                <td>{{ item.category }}</td>
+                <td>{{ item.notes }}</td>
+                <td>
+                    <form action="/library/{{ item.id }}/delete" method="post">
+                        <button type="submit" class="btn-delete" onclick="return confirm('Remove this PDF?')">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="empty-state">No PDFs yet. Upload the material you want next to this journal.</p>
+{% endif %}
+{% endblock %}

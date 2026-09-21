@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel-head page-head">
+    <div>
+        <h2>Pricing</h2>
+        <p class="muted">Start free. Subscribe when the journal becomes daily work.</p>
+    </div>
+    {% if not user %}
+    <a class="button-link" href="/register">Create account</a>
+    {% endif %}
+</section>
+
+<div class="pricing-grid">
+    {% for key, item in plans.items() %}
+    <article class="price-card {% if key == current_plan %}price-card-featured{% endif %}">
+        <p class="eyebrow">{{ item.name }}</p>
+        <h3>{% if item.price == 0 %}Free{% else %}${{ item.price }}/mo{% endif %}</h3>
+        <p class="muted">{{ item.tagline }}</p>
+        <ul class="feature-list compact">
+            {% for line in item.features %}
+            <li>{{ line }}</li>
+            {% endfor %}
+        </ul>
+        {% if user %}
+            {% if key == current_plan %}
+                <p class="plan-current">Current plan</p>
+            {% elif key != 'free' %}
+                <a class="button-link" href="/billing">Subscribe</a>
+            {% endif %}
+        {% else %}
+            <a class="button-link" href="/register">Get started</a>
+        {% endif %}
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}

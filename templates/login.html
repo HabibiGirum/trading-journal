@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="form-panel auth-panel">
+    <h2>Sign in</h2>
+    <p class="form-hint">Open your trading desk.</p>
+    <form action="/login" method="post" class="entry-form">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <label>
+            Email
+            <input type="email" name="email" required autocomplete="email">
+        </label>
+        <label>
+            Password
+            <input type="password" name="password" required autocomplete="current-password">
+        </label>
+        <button type="submit">Sign in</button>
+    </form>
+    <p class="form-hint">New here? <a class="text-link" href="/register">Create an account</a></p>
+</section>
+{% endblock %}
