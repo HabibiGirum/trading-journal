@@ -16,7 +16,7 @@ from .models import AnalysisNote, FileAsset, LearningResource, SetupEntry, Trade
 from .security import origin_matches_host, require_production_secrets
 from .storage import uploads_dir
 from .templating import render
-from .routers import auth, billing, journal, library
+from .routers import auth, billing, journal, library, setup
 
 
 CSRF_EXEMPT = {"/billing/webhook", "/health"}
@@ -47,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(billing.router)
     app.include_router(journal.router)
+    app.include_router(setup.router)
     app.include_router(library.router)
 
     @app.middleware("http")

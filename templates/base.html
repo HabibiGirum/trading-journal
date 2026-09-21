@@ -13,7 +13,7 @@
             <h1>Trading Journal</h1>
             <p class="subtitle">
                 {% if user %}
-                    Start balance, profit, and the lesson from each trade.
+                    Start balance, profit, lessons, and a setup check before you click.
                 {% else %}
                     Track your start balance, profit, wins, and the mistake when you lose.
                 {% endif %}
@@ -22,6 +22,7 @@
         <nav class="nav-links">
             {% if user %}
                 <a href="/journey">Journey</a>
+                <a href="/setup">Setup</a>
                 <a href="/trades/new">Add trade</a>
                 <a href="/account">Account</a>
                 <form action="/logout" method="post" class="inline-form">

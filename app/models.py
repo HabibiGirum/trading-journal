@@ -155,6 +155,29 @@ class LearningResource(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class BiasCheck(Base):
+    __tablename__ = "bias_checks"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    profile_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("trading_profiles.id"), nullable=True, index=True)
+    pair: Mapped[str] = mapped_column(String(50), nullable=False, default="")
+    daily: Mapped[str] = mapped_column(String(20), nullable=False)
+    h4: Mapped[str] = mapped_column(String(20), nullable=False)
+    h1: Mapped[str] = mapped_column(String(20), nullable=False, default="range")
+    structure: Mapped[str] = mapped_column(String(20), nullable=False, default="mixed")
+    location: Mapped[str] = mapped_column(String(20), nullable=False, default="equilibrium")
+    liquidity: Mapped[str] = mapped_column(String(20), nullable=False, default="none")
+    current_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    swing_low: Mapped[float | None] = mapped_column(Float, nullable=True)
+    swing_high: Mapped[float | None] = mapped_column(Float, nullable=True)
+    direction: Mapped[str] = mapped_column(String(20), nullable=False)
+    strength: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    stop_rule: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class FileAsset(Base):
     __tablename__ = "file_assets"
 

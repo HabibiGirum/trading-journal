@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel-head page-head">
+    <div>
+        <h2>Setup check</h2>
+        <p class="muted">Mark what the chart is doing. The rules decide buy, sell, or no trade — so you do not.</p>
+    </div>
+</section>
+
+{% if result %}
+<section class="verdict verdict-{{ result.action }}">
+    <p class="eyebrow">System direction</p>
+    <h2>{{ result.direction }}</h2>
+    <p class="verdict-strength">{{ result.strength }}</p>
+    <p class="verdict-sl">{{ result.stop_rule }}</p>
+    <p class="verdict-target">{{ result.target_rule }}</p>
+    <ul class="feature-list compact">
+        {% for line in result.reasons %}
+        <li>{{ line }}</li>
+        {% endfor %}
+    </ul>
+    <p class="emotion-rule">{{ result.emotion }}</p>
+</section>
+{% endif %}
+
+<section class="form-panel">
+    <h2>Conditions</h2>
+    <form action="/setup" method="post" class="entry-form cal-form-grid">
+        <label>
+            Pair
+            <input type="text" name="pair" value="{{ form.pair if form is defined else 'BTCUSDT' }}" required>
+        </label>
+        <label>
+            Daily
+            <select name="daily" required>
+                <option value="bullish" {% if form is defined and form.daily == 'bullish' %}selected{% endif %}>Bullish</option>
+                <option value="bearish" {% if form is defined and form.daily == 'bearish' %}selected{% endif %}>Bearish</option>
+                <option value="range" {% if form is defined and form.daily == 'range' %}selected{% endif %}>Range</option>
+            </select>
+        </label>
+        <label>
+            4H
+            <select name="h4" required>
+                <option value="bullish" {% if form is defined and form.h4 == 'bullish' %}selected{% endif %}>Bullish</option>
+                <option value="bearish" {% if form is defined and form.h4 == 'bearish' %}selected{% endif %}>Bearish</option>
+                <option value="range" {% if form is defined and form.h4 == 'range' %}selected{% endif %}>Range</option>
+            </select>
+        </label>
+        <label>
+            1H
+            <select name="h1">
+                <option value="bullish" {% if form is defined and form.h1 == 'bullish' %}selected{% endif %}>Bullish</option>
+                <option value="bearish" {% if form is defined and form.h1 == 'bearish' %}selected{% endif %}>Bearish</option>
+                <option value="range" {% if form is not defined or form.h1 == 'range' %}selected{% endif %}>Range / mixed</option>
+            </select>
+        </label>
+        <label>
+            Structure
+            <select name="structure">
+                <option value="up" {% if form is defined and form.structure == 'up' %}selected{% endif %}>Higher highs</option>
+                <option value="down" {% if form is defined and form.structure == 'down' %}selected{% endif %}>Lower lows</option>
+                <option value="mixed" {% if form is not defined or form.structure == 'mixed' %}selected{% endif %}>Mixed</option>
+            </select>
+        </label>
+        <label>
+            Location
+            <select name="location">
+                <option value="discount" {% if form is defined and form.location == 'discount' %}selected{% endif %}>Discount (cheap)</option>
+                <option value="equilibrium" {% if form is not defined or form.location == 'equilibrium' %}selected{% endif %}>Equilibrium</option>
+                <option value="premium" {% if form is defined and form.location == 'premium' %}selected{% endif %}>Premium (expensive)</option>
+            </select>
+        </label>
+        <label>
+            Liquidity
+            <select name="liquidity">
+                <option value="none" {% if form is not defined or form.liquidity == 'none' %}selected{% endif %}>None yet</option>
+                <option value="swept_lows" {% if form is defined and form.liquidity == 'swept_lows' %}selected{% endif %}>Swept lows</option>
+                <option value="swept_highs" {% if form is defined and form.liquidity == 'swept_highs' %}selected{% endif %}>Swept highs</option>
+            </select>
+        </label>
+        <label>
+            Price now (optional)
+            <input type="number" step="any" name="current_price" value="{{ form.current_price if form is defined else '' }}" placeholder="0">
+        </label>
+        <label>
+            4H swing low (optional)
+            <input type="number" step="any" name="swing_low" value="{{ form.swing_low if form is defined else '' }}" placeholder="Buy stop goes under this">
+        </label>
+        <label>
+            4H swing high (optional)
+            <input type="number" step="any" name="swing_high" value="{{ form.swing_high if form is defined else '' }}" placeholder="Sell stop goes above this">
+        </label>
+        <button type="submit" class="span-full">Get direction</button>
+    </form>
+</section>
+
+{% if history %}
+<section class="panel">
+    <h2>Recent checks</h2>
+    <div class="card-list">
+        {% for item in history %}
+        <article class="note-card">
+            <p>
+                <strong>{{ item.pair }}</strong>
+                · Daily {{ item.daily }} · 4H {{ item.h4 }} · 1H {{ item.h1 }}
+            </p>
+            <p>
+                <span class="trade-badge {% if item.direction == 'BUY' %}badge-win{% elif item.direction == 'SELL' %}badge-loss{% else %}badge-be{% endif %}">{{ item.direction }}</span>
+                {{ item.strength }}
+            </p>
+            <p class="muted">{{ item.stop_rule }}</p>
+            <p class="muted">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<p class="form-hint">This is a rules checklist, not a live signal. You still mark the chart. The point is: if daily and 4H disagree, you do not trade.</p>
+{% endblock %}

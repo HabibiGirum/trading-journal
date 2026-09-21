@@ -566,6 +566,29 @@ th { color: var(--muted); font-size: 0.85rem; }
 .trade-simple-right { display: grid; justify-items: end; gap: 0.35rem; }
 .lesson-text { margin: 0; color: var(--text); line-height: 1.5; }
 
+.verdict {
+    padding: 1.4rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+}
+.verdict h2 { font-size: 2rem; margin: 0.2rem 0 0.4rem; }
+.verdict-strength, .verdict-sl, .verdict-target { color: var(--muted); margin: 0.3rem 0; }
+.verdict-buy { border-color: var(--profit); }
+.verdict-buy h2 { color: var(--profit); }
+.verdict-sell { border-color: var(--loss); }
+.verdict-sell h2 { color: var(--loss); }
+.verdict-wait { border-color: var(--muted); }
+.verdict-wait h2 { color: var(--muted); }
+.emotion-rule {
+    margin: 1rem 0 0;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-sm);
+    background: rgba(85, 194, 255, 0.1);
+    color: var(--accent);
+    font-weight: 600;
+}
+
 .page-head { margin-bottom: 1.2rem; }
 
 .page-head { margin-bottom: 1.2rem; }
