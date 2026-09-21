@@ -12,13 +12,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY templates ./templates
 COPY static ./static
-COPY uploads/.gitkeep ./uploads/.gitkeep
 
 ENV PYTHONUNBUFFERED=1
 ENV UPLOAD_DIR=/data/uploads
 ENV PORT=8000
 
-RUN mkdir -p /data/uploads
+RUN mkdir -p /data/uploads ./uploads
 
 EXPOSE 8000
 
