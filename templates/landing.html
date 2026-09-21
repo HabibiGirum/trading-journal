@@ -3,62 +3,24 @@
 {% block content %}
 <section class="hero">
     <div>
-        <p class="eyebrow">Built for the desk, not the feed</p>
-        <h2 class="hero-title">Your trading journey, in one place.</h2>
+        <p class="eyebrow">Simple trading journal</p>
+        <h2 class="hero-title">Start balance. Profit. Lesson.</h2>
         <p class="hero-copy">
-            Create an account. Keep a profile for each market you trade. Log the days that matter,
-            post the entries worth repeating, write the condition of the tape, and file the PDFs you actually study.
+            Write down what you started with. Log each trade. If you lose, record the mistake.
+            If you win, record how you gained. That is the whole journey.
         </p>
         <div class="hero-actions">
-            <a class="button-link" href="/register">Start free</a>
-            <a class="cal-nav-btn" href="/pricing">See plans</a>
+            <a class="button-link" href="/register">Create account</a>
+            <a class="cal-nav-btn" href="/login">Sign in</a>
         </div>
     </div>
     <aside class="hero-panel">
-        <p class="muted">What you keep</p>
+        <p class="muted">Each trade asks only this</p>
         <ul class="feature-list">
-            <li>Daily PnL, calendar, and trade screenshots</li>
-            <li>A library of good entries with why they worked</li>
-            <li>Market condition notes before and after the session</li>
-            <li>Private PDFs: playbooks, psychology, recaps</li>
-            <li>Separate trading profiles, unlocked by subscription</li>
+            <li>Pair and date</li>
+            <li>Win or loss, and the dollar amount</li>
+            <li>The mistake, or what you did right</li>
         </ul>
     </aside>
-</section>
-
-<section class="split-grid">
-    <article class="panel">
-        <h2>Process first</h2>
-        <p class="muted">Journal the trade. Save the chart. Tag the session. Review the week without hunting through phones and folders.</p>
-    </article>
-    <article class="panel">
-        <h2>Entries that teach</h2>
-        <p class="muted">Only keep A+ setups. Write the market condition, the trigger, and why you would take it again.</p>
-    </article>
-    <article class="panel">
-        <h2>Learn on file</h2>
-        <p class="muted">Upload PDFs you want next to the journal — not lost in Drive. Trader and Pro unlock the library.</p>
-    </article>
-</section>
-
-<section class="panel">
-    <div class="panel-head">
-        <h2>Plans</h2>
-        <a class="button-link" href="/register">Create account</a>
-    </div>
-    <div class="pricing-grid">
-        {% for key, item in plans.items() %}
-        <article class="price-card {% if key == 'trader' %}price-card-featured{% endif %}">
-            <p class="eyebrow">{{ item.name }}</p>
-            <h3>{% if item.price == 0 %}Free{% else %}${{ item.price }}/mo{% endif %}</h3>
-            <p class="muted">{{ item.tagline }}</p>
-            <ul class="feature-list compact">
-                {% for line in item.features %}
-                <li>{{ line }}</li>
-                {% endfor %}
-            </ul>
-        </article>
-        {% endfor %}
-    </div>
 </section>
 {% endblock %}

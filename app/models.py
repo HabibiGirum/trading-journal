@@ -40,6 +40,7 @@ class TradingProfile(Base):
     experience: Mapped[str] = mapped_column(String(40), nullable=False, default="Developing")
     goal: Mapped[str] = mapped_column(Text, nullable=False, default="")
     bio: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    starting_balance: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     is_default: Mapped[bool] = mapped_column(default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

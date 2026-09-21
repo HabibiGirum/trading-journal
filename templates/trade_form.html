@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="form-panel">
-    <h2>Add Daily Trade Result</h2>
+<section class="form-panel auth-panel">
+    <h2>Add a trade</h2>
+    <p class="form-hint">Profit is a plus number. Loss is a minus number. Then write the lesson.</p>
     <form action="/trades" method="post" enctype="multipart/form-data" class="entry-form">
         <label>
-            Trade Date
+            Date
             <input type="date" name="trade_date" value="{{ prefill_date }}" required>
         </label>
         <label>
@@ -13,38 +14,25 @@
             <input type="text" name="pair" placeholder="BTCUSDT" required>
         </label>
         <label>
-            Market Type
-            <select name="market_type" required>
-                <option value="Futures">Futures</option>
-                <option value="Spot">Spot</option>
-                <option value="Options">Options</option>
-            </select>
-        </label>
-        <label>
-            Session
-            <input type="text" name="session" placeholder="London / New York / Asia" required>
-        </label>
-        <label>
-            Daily PnL
-            <input type="number" step="0.01" name="pnl_amount" placeholder="150.75 or -90.50" required>
-        </label>
-        <label>
-            Outcome
+            Result
             <select name="outcome" required>
                 <option value="win">Win</option>
                 <option value="loss">Loss</option>
-                <option value="breakeven">Breakeven</option>
             </select>
         </label>
         <label>
-            Notes
-            <textarea name="notes" rows="5" placeholder="Why you won or lost, mistakes, emotions, execution notes"></textarea>
+            Profit or loss ($)
+            <input type="number" step="0.01" name="pnl_amount" placeholder="120 or -80" required>
+        </label>
+        <label class="span-full">
+            Lesson
+            <textarea name="notes" rows="5" placeholder="If you lost: what was the mistake? If you won: how did you gain?"></textarea>
         </label>
         <label>
-            Chart Screenshot (optional)
+            Chart (optional)
             <input type="file" name="chart_image" accept=".png,.jpg,.jpeg,.webp">
         </label>
-        <button type="submit">Save Trade</button>
+        <button type="submit">Save trade</button>
     </form>
 </section>
 {% endblock %}

@@ -101,5 +101,10 @@ def migrate_schema() -> None:
                 for table in ("trade_logs", "trading_plans", "analysis_notes"):
                     _add_column(conn, table, "user_id", "INTEGER")
                     _add_column(conn, table, "profile_id", "INTEGER")
+                _add_column(conn, "trading_profiles", "starting_balance", "FLOAT")
+                try:
+                    conn.execute(text("UPDATE trading_profiles SET starting_balance = 0 WHERE starting_balance IS NULL"))
+                except OperationalError:
+                    pass
         finally:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)

@@ -1,17 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <section class="trade-hero">
     <div class="trade-hero-left">
-        <a href="/calendar?year={{ trade.trade_date.year }}&month={{ trade.trade_date.month }}" class="back-link">&larr; Back to Calendar</a>
-        <h2>{{ trade.pair }} &mdash; {{ trade.trade_date }}</h2>
+        <a href="/journey" class="back-link">&larr; Back to journey</a>
+        <h2>{{ trade.pair }} · {{ trade.trade_date }}</h2>
         <div class="trade-meta">
             <span class="trade-badge {{ 'badge-win' if trade.outcome == 'win' else ('badge-loss' if trade.outcome == 'loss' else 'badge-be') }}">
-                {{ trade.outcome|upper }}
+                {{ 'WIN' if trade.outcome == 'win' else ('LOSS' if trade.outcome == 'loss' else 'BE') }}
             </span>
-            <span class="trade-badge badge-market">{{ trade.market_type }}</span>
-            <span class="trade-badge badge-session">{{ trade.session }}</span>
         </div>
     </div>
     <div class="trade-hero-pnl {% if trade.pnl_amount >= 0 %}profit{% else %}loss{% endif %}">
@@ -19,76 +16,51 @@
     </div>
 </section>
 
-{% if trade.notes %}
 <section class="panel trade-notes-panel">
-    <h3>Notes</h3>
+    <h3>{% if trade.outcome == 'loss' %}Mistake{% elif trade.outcome == 'win' %}What worked{% else %}Note{% endif %}</h3>
+    {% if trade.notes %}
     <p>{{ trade.notes }}</p>
+    {% else %}
+    <p class="empty-state">No lesson saved for this trade.</p>
+    {% endif %}
 </section>
-{% endif %}
 
-<!-- Existing images gallery -->
+{% if trade.images %}
 <section class="panel">
     <div class="panel-head">
-        <h3>Analysis Screenshots</h3>
-        <span class="img-count">{{ trade.images|length }} image{{ "s" if trade.images|length != 1 }}</span>
+        <h3>Chart</h3>
     </div>
-
-    {% if trade.images %}
     <div class="trade-gallery">
         {% for img in trade.images %}
         <div class="gallery-card">
-            <img src="/media/{{ img.filename }}" alt="{{ img.caption or 'Trade analysis' }}" loading="lazy">
+            <img src="/media/{{ img.filename }}" alt="{{ img.caption or 'Trade chart' }}" loading="lazy">
             <div class="gallery-card-body">
-                <span class="gallery-label {{ 'label-win' if img.label == 'win' else ('label-loss' if img.label == 'loss' else 'label-analysis') }}">
-                    {{ img.label|upper }}
-                </span>
-                {% if img.caption %}
-                <p class="gallery-caption">{{ img.caption }}</p>
-                {% endif %}
                 <form action="/trades/{{ trade.id }}/images/{{ img.id }}/delete" method="post" class="inline-form">
-                    <button type="submit" class="btn-delete" onclick="return confirm('Delete this image?')">Remove</button>
+                    <button type="submit" class="btn-delete" onclick="return confirm('Remove this image?')">Remove</button>
                 </form>
             </div>
         </div>
         {% endfor %}
     </div>
-    {% else %}
-    <p class="empty-state">No analysis images uploaded yet. Add screenshots below to learn from this trade.</p>
-    {% endif %}
 </section>
+{% endif %}
 
-<!-- Upload new image -->
 <section class="form-panel">
-    <h3>Upload Analysis Image</h3>
-    <p class="form-hint">Upload your chart screenshots — winning setups to replicate, or losing setups to learn from.</p>
-    <form action="/trades/{{ trade.id }}/images" method="post" enctype="multipart/form-data" class="entry-form upload-form-grid">
+    <h3>Add a chart</h3>
+    <form action="/trades/{{ trade.id }}/images" method="post" enctype="multipart/form-data" class="entry-form">
+        <input type="hidden" name="label" value="{{ trade.outcome }}">
+        <input type="hidden" name="caption" value="">
         <label>
-            Label
-            <select name="label">
-                <option value="win">Winning Setup</option>
-                <option value="loss">Losing Setup</option>
-                <option value="entry">Entry Point</option>
-                <option value="exit">Exit Point</option>
-                <option value="analysis">General Analysis</option>
-            </select>
-        </label>
-        <label>
-            Caption
-            <input type="text" name="caption" placeholder="E.g. Perfect breakout retest entry on 15m">
-        </label>
-        <label class="span-full">
             Image
             <input type="file" name="chart_image" accept=".png,.jpg,.jpeg,.webp" required>
         </label>
-        <button type="submit">Upload Screenshot</button>
+        <button type="submit">Upload</button>
     </form>
 </section>
 
-<!-- Danger zone -->
 <section class="panel danger-zone">
     <form action="/trades/{{ trade.id }}/delete" method="post">
-        <button type="submit" class="btn-danger" onclick="return confirm('Delete this trade and all its images?')">Delete This Trade</button>
+        <button type="submit" class="btn-danger" onclick="return confirm('Delete this trade?')">Delete trade</button>
     </form>
 </section>
-
 {% endblock %}

@@ -538,6 +538,36 @@ th { color: var(--muted); font-size: 0.85rem; }
 
 .auth-panel { max-width: 28rem; }
 
+.balance-form {
+    display: flex;
+    gap: 0.7rem;
+    align-items: end;
+    flex-wrap: wrap;
+}
+.balance-form label { display: grid; gap: 0.4rem; color: var(--muted); font-size: 0.88rem; }
+.balance-form input {
+    width: 12rem;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: #0a1425;
+    color: var(--text);
+    font: inherit;
+}
+.start-balance-panel { margin-bottom: 1.5rem; }
+
+.trade-simple-card { display: grid; gap: 0.6rem; }
+.trade-simple-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+}
+.trade-simple-right { display: grid; justify-items: end; gap: 0.35rem; }
+.lesson-text { margin: 0; color: var(--text); line-height: 1.5; }
+
+.page-head { margin-bottom: 1.2rem; }
+
 .page-head { margin-bottom: 1.2rem; }
 
 .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }

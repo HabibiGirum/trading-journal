@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..deps import BillingRequired, current_user, flash, require_user, template_context
+from ..deps import BillingRequired, current_user, flash, get_active_profile, require_user, template_context
 from ..models import AnalysisNote, TradeLog, TradingPlan, TradingProfile, User
 from ..plans import plan_limits
 from ..security import hash_password, is_safe_next, valid_email, verify_password
@@ -22,6 +22,7 @@ def _create_default_profile(db: Session, user: User) -> TradingProfile:
         style="Intraday",
         experience="Developing",
         goal="Track process, not just PnL.",
+        starting_balance=0.0,
         is_default=True,
     )
     db.add(profile)
@@ -83,6 +84,7 @@ def register(
     display_name: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    starting_balance: float = Form(0),
     db: Session = Depends(get_db),
 ):
     email_clean = email.strip().lower()
@@ -110,6 +112,7 @@ def register(
     db.add(user)
     db.flush()
     profile = _create_default_profile(db, user)
+    profile.starting_balance = starting_balance
     if db.query(User).count() == 1:
         db.query(TradeLog).filter(TradeLog.user_id.is_(None)).update(
             {"user_id": user.id, "profile_id": profile.id}, synchronize_session=False
@@ -123,7 +126,7 @@ def register(
     db.commit()
     request.session["user_id"] = user.id
     request.session["profile_id"] = profile.id
-    flash(request, "Account created. This is your trading desk.", "success")
+    flash(request, "Account created. Set trades from your start balance.", "success")
     return RedirectResponse(url="/journey", status_code=303)
 
 
@@ -138,11 +141,11 @@ def account_page(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(require_user),
+    profile: TradingProfile = Depends(get_active_profile),
 ):
-    profiles = db.query(TradingProfile).filter(TradingProfile.user_id == user.id).order_by(TradingProfile.id).all()
     return render(
         "account.html",
-        template_context(request, user=user, profiles=profiles, title="Account"),
+        template_context(request, user=user, profile=profile, title="Account"),
     )
 
 
@@ -150,16 +153,19 @@ def account_page(
 def update_account(
     request: Request,
     display_name: str = Form(...),
+    starting_balance: float = Form(0),
     db: Session = Depends(get_db),
     user: User = Depends(require_user),
+    profile: TradingProfile = Depends(get_active_profile),
 ):
     name = display_name.strip()
     if len(name) < 2:
-        flash(request, "Display name is too short.", "error")
+        flash(request, "Name is too short.", "error")
         return RedirectResponse(url="/account", status_code=303)
     user.display_name = name[:80]
+    profile.starting_balance = starting_balance
     db.commit()
-    flash(request, "Account updated.", "success")
+    flash(request, "Saved.", "success")
     return RedirectResponse(url="/account", status_code=303)
 
 

@@ -10,46 +10,29 @@
     <header class="site-header">
         <div>
             <p class="eyebrow">{{ app_name }}</p>
-            <h1>{% if user and profile %}{{ profile.name }}{% else %}Trading Journey{% endif %}</h1>
+            <h1>Trading Journal</h1>
             <p class="subtitle">
                 {% if user %}
-                    {{ user.display_name }} · {{ plan.name }} plan
-                    {% if profile %} · {{ profile.markets }}{% endif %}
+                    Start balance, profit, and the lesson from each trade.
                 {% else %}
-                    Track good entries, market conditions, lessons, and the path you are actually trading.
+                    Track your start balance, profit, wins, and the mistake when you lose.
                 {% endif %}
             </p>
         </div>
         <nav class="nav-links">
             {% if user %}
                 <a href="/journey">Journey</a>
-                <a href="/calendar">Calendar</a>
-                <a href="/entries">Entries</a>
-                <a href="/conditions">Markets</a>
-                <a href="/library">Learn</a>
-                <a href="/billing">Plan</a>
+                <a href="/trades/new">Add trade</a>
                 <a href="/account">Account</a>
                 <form action="/logout" method="post" class="inline-form">
                     <button type="submit" class="nav-ghost">Sign out</button>
                 </form>
             {% else %}
-                <a href="/pricing">Pricing</a>
                 <a href="/login">Sign in</a>
                 <a href="/register">Create account</a>
             {% endif %}
         </nav>
     </header>
-
-    {% if user and profiles and profiles|length > 1 %}
-    <div class="profile-bar">
-        <span>Active profile</span>
-        {% for item in profiles %}
-            <form action="/profiles/{{ item.id }}/activate" method="post" class="inline-form">
-                <button type="submit" class="profile-chip {% if profile and item.id == profile.id %}is-active{% endif %}">{{ item.name }}</button>
-            </form>
-        {% endfor %}
-    </div>
-    {% endif %}
 
     {% if flash_messages %}
     <div class="flash-wrap">

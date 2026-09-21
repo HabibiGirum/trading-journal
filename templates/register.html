@@ -2,11 +2,11 @@
 
 {% block content %}
 <section class="form-panel auth-panel">
-    <h2>Create your account</h2>
-    <p class="form-hint">One profile to start. Upgrade when you want more desks, unlimited logs, and a PDF library.</p>
+    <h2>Create account</h2>
+    <p class="form-hint">Set your start balance. Then log trades and lessons.</p>
     <form action="/register" method="post" class="entry-form">
         <label>
-            Display name
+            Name
             <input type="text" name="display_name" placeholder="Your name" required minlength="2">
         </label>
         <label>
@@ -16,6 +16,10 @@
         <label>
             Password
             <input type="password" name="password" required minlength="8" autocomplete="new-password">
+        </label>
+        <label>
+            Start balance
+            <input type="number" step="0.01" name="starting_balance" value="1000" required>
         </label>
         <button type="submit">Create account</button>
     </form>

@@ -46,19 +46,6 @@ def journey(
         select(TradeLog)
         .where(TradeLog.user_id == user.id, TradeLog.profile_id == profile.id)
         .order_by(TradeLog.trade_date.desc(), TradeLog.id.desc())
-        .limit(12)
-    ).all()
-    plans = db.scalars(
-        select(TradingPlan)
-        .where(TradingPlan.user_id == user.id, TradingPlan.profile_id == profile.id)
-        .order_by(TradingPlan.created_at.desc())
-        .limit(6)
-    ).all()
-    analyses = db.scalars(
-        select(AnalysisNote)
-        .where(AnalysisNote.user_id == user.id, AnalysisNote.profile_id == profile.id)
-        .order_by(AnalysisNote.created_at.desc())
-        .limit(6)
     ).all()
 
     total_pnl = db.scalar(
@@ -66,79 +53,17 @@ def journey(
             TradeLog.user_id == user.id, TradeLog.profile_id == profile.id
         )
     ) or 0.0
-    green_days = db.scalar(
+    wins = db.scalar(
         select(func.count()).select_from(TradeLog).where(
-            TradeLog.user_id == user.id, TradeLog.profile_id == profile.id, TradeLog.pnl_amount > 0
+            TradeLog.user_id == user.id, TradeLog.profile_id == profile.id, TradeLog.outcome == "win"
         )
     ) or 0
-    red_days = db.scalar(
+    losses = db.scalar(
         select(func.count()).select_from(TradeLog).where(
-            TradeLog.user_id == user.id, TradeLog.profile_id == profile.id, TradeLog.pnl_amount < 0
+            TradeLog.user_id == user.id, TradeLog.profile_id == profile.id, TradeLog.outcome == "loss"
         )
     ) or 0
-    best_day = db.scalar(
-        select(func.max(TradeLog.pnl_amount)).where(
-            TradeLog.user_id == user.id, TradeLog.profile_id == profile.id
-        )
-    ) or 0.0
-    worst_day = db.scalar(
-        select(func.min(TradeLog.pnl_amount)).where(
-            TradeLog.user_id == user.id, TradeLog.profile_id == profile.id
-        )
-    ) or 0.0
-    trade_count = db.scalar(
-        select(func.count()).select_from(TradeLog).where(
-            TradeLog.user_id == user.id, TradeLog.profile_id == profile.id
-        )
-    ) or 0
-
-    from ..models import LearningResource, MarketCondition, SetupEntry
-
-    entries = db.scalars(
-        select(SetupEntry)
-        .where(SetupEntry.user_id == user.id, SetupEntry.profile_id == profile.id)
-        .order_by(SetupEntry.created_at.desc())
-        .limit(6)
-    ).all()
-    conditions = db.scalars(
-        select(MarketCondition)
-        .where(MarketCondition.user_id == user.id, MarketCondition.profile_id == profile.id)
-        .order_by(MarketCondition.note_date.desc(), MarketCondition.id.desc())
-        .limit(4)
-    ).all()
-    pdfs = db.scalars(
-        select(LearningResource)
-        .where(LearningResource.user_id == user.id, LearningResource.profile_id == profile.id)
-        .order_by(LearningResource.created_at.desc())
-        .limit(4)
-    ).all()
-
-    timeline = []
-    for trade in trades[:8]:
-        timeline.append({
-            "kind": "trade",
-            "when": trade.trade_date,
-            "title": f"{trade.pair} · {trade.outcome.upper()}",
-            "detail": f"${trade.pnl_amount:.2f}",
-            "href": f"/trades/{trade.id}",
-        })
-    for entry in entries[:6]:
-        timeline.append({
-            "kind": "entry",
-            "when": entry.created_at.date(),
-            "title": f"Good entry · {entry.pair}",
-            "detail": entry.title,
-            "href": "/entries",
-        })
-    for note in conditions[:4]:
-        timeline.append({
-            "kind": "market",
-            "when": note.note_date,
-            "title": f"{note.market} · {note.trend}",
-            "detail": note.summary[:120],
-            "href": "/conditions",
-        })
-    timeline.sort(key=lambda item: item["when"], reverse=True)
+    start_balance = profile.starting_balance or 0.0
 
     return render(
         "dashboard.html",
@@ -147,23 +72,30 @@ def journey(
             user=user,
             profile=profile,
             trade_logs=trades,
-            plans=plans,
-            analyses=analyses,
-            entries=entries,
-            conditions=conditions,
-            pdfs=pdfs,
-            timeline=timeline[:12],
             stats={
+                "start_balance": start_balance,
                 "total_pnl": total_pnl,
-                "green_days": green_days,
-                "red_days": red_days,
-                "best_day": best_day,
-                "worst_day": worst_day,
-                "trade_count": trade_count,
+                "current_balance": start_balance + total_pnl,
+                "wins": wins,
+                "losses": losses,
             },
             title="Journey",
         ),
     )
+
+
+@router.post("/balance")
+def update_balance(
+    request: Request,
+    starting_balance: float = Form(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_user),
+    profile: TradingProfile = Depends(get_active_profile),
+):
+    profile.starting_balance = starting_balance
+    db.commit()
+    flash(request, "Start balance saved.", "success")
+    return RedirectResponse(url="/journey", status_code=303)
 
 
 @router.get("/calendar")
@@ -261,8 +193,8 @@ async def create_trade(
     request: Request,
     trade_date: str = Form(...),
     pair: str = Form(...),
-    market_type: str = Form(...),
-    session: str = Form(...),
+    market_type: str = Form("Futures"),
+    session: str = Form("Day"),
     pnl_amount: float = Form(...),
     outcome: str = Form("win"),
     notes: str = Form(""),
@@ -276,15 +208,23 @@ async def create_trade(
     if cap is not None and _month_trade_count(db, user, day) >= cap:
         raise BillingRequired("This month's trade limit is reached. Upgrade to keep logging.")
 
+    result = outcome.strip().lower()
+    if result not in {"win", "loss", "breakeven"}:
+        result = "win" if pnl_amount >= 0 else "loss"
+    if result == "loss" and pnl_amount > 0:
+        pnl_amount = -abs(pnl_amount)
+    if result == "win" and pnl_amount < 0:
+        result = "loss"
+
     trade = TradeLog(
         user_id=user.id,
         profile_id=profile.id,
         trade_date=day,
         pair=pair.strip().upper(),
-        market_type=market_type.strip(),
-        session=session.strip(),
+        market_type=market_type.strip() or "Futures",
+        session=session.strip() or "Day",
         pnl_amount=pnl_amount,
-        outcome=outcome.strip(),
+        outcome=result,
         notes=notes.strip(),
     )
     db.add(trade)
@@ -297,14 +237,11 @@ async def create_trade(
             db.rollback()
             flash(request, exc.message, "error")
             return RedirectResponse(url="/trades/new", status_code=303)
-        db.add(TradeImage(trade_id=trade.id, filename=saved, label=outcome.strip(), caption="Uploaded with trade"))
+        db.add(TradeImage(trade_id=trade.id, filename=saved, label=result, caption="Chart"))
 
     db.commit()
     flash(request, "Trade saved.", "success")
-    referer = request.headers.get("referer", "/journey")
-    if "calendar" in referer:
-        return RedirectResponse(url=f"/calendar?year={day.year}&month={day.month}", status_code=303)
-    return RedirectResponse(url=f"/trades/{trade.id}", status_code=303)
+    return RedirectResponse(url="/journey", status_code=303)
 
 
 @router.get("/trades/{trade_id}")
