@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .models import TradingProfile, User
 from .plans import PLANS, effective_plan, plan_limits
+from .scenarios import SCENARIOS
 
 
 class LoginRequired(Exception):
@@ -131,6 +132,7 @@ def template_context(request: Request, **extra):
         "nav_path": request.url.path or "",
         "focus_pairs": focus_pairs(profile),
         "focus_sessions": focus_sessions(profile),
+        "scenarios": SCENARIOS,
     }
     ctx.update(extra)
     if ctx.get("profile"):

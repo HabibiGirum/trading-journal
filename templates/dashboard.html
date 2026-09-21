@@ -59,7 +59,7 @@
                 <div class="trade-simple-top">
                     <div>
                         <a href="/trades/{{ trade.id }}" class="trade-row-link">{{ trade.pair }}</a>
-                        <p class="muted">{{ trade.trade_date }}</p>
+                        <p class="muted">{{ trade.trade_date }}{% if trade.clock_range %} · {{ trade.clock_range }}{% endif %}{% if trade.duration_label %} ({{ trade.duration_label }}){% endif %}{% if trade.scenario %} · {{ trade.scenario }}{% endif %}</p>
                     </div>
                     <div class="trade-simple-right">
                         <span class="trade-badge {{ 'badge-win' if trade.outcome == 'win' else ('badge-loss' if trade.outcome == 'loss' else 'badge-be') }}">

@@ -65,12 +65,42 @@ class TradeLog(Base):
     session: Mapped[str] = mapped_column(String(50), nullable=False, default="London")
     pnl_amount: Mapped[float] = mapped_column(Float, nullable=False)
     outcome: Mapped[str] = mapped_column(String(10), nullable=False, default="win")
+    scenario: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    open_time: Mapped[str] = mapped_column(String(8), nullable=False, default="")
+    close_time: Mapped[str] = mapped_column(String(8), nullable=False, default="")
     notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     images: Mapped[list["TradeImage"]] = relationship(
         back_populates="trade", cascade="all, delete-orphan", lazy="selectin",
     )
+
+    @property
+    def clock_range(self) -> str:
+        if self.open_time and self.close_time:
+            return f"{self.open_time} → {self.close_time}"
+        return self.open_time or self.close_time or ""
+
+    @property
+    def duration_label(self) -> str:
+        if not self.open_time or not self.close_time:
+            return ""
+        try:
+            oh, om = (int(part) for part in self.open_time.split(":")[:2])
+            ch, cm = (int(part) for part in self.close_time.split(":")[:2])
+        except ValueError:
+            return ""
+        start = oh * 60 + om
+        end = ch * 60 + cm
+        if end < start:
+            end += 24 * 60
+        minutes = end - start
+        hours, mins = divmod(minutes, 60)
+        if hours and mins:
+            return f"{hours}h {mins}m"
+        if hours:
+            return f"{hours}h"
+        return f"{mins}m"
 
 
 class TradeImage(Base):

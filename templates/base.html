@@ -67,6 +67,11 @@
             </main>
         </div>
     </div>
+    <div class="lightbox" data-lightbox hidden>
+        <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&times;</button>
+        <img alt="Full chart" data-lightbox-img>
+        <p class="lightbox-hint">Click the chart for actual size. Esc or outside to close.</p>
+    </div>
     <script>
         (function () {
             function label(theme) { return theme === "dark" ? "Light mode" : "Dark mode"; }
@@ -83,6 +88,71 @@
                     apply(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
                 });
             });
+
+            var box = document.querySelector("[data-lightbox]");
+            var boxImg = document.querySelector("[data-lightbox-img]");
+            function closeLightbox() {
+                if (!box) return;
+                box.hidden = true;
+                document.body.classList.remove("lightbox-open");
+                if (boxImg) boxImg.removeAttribute("src");
+                if (boxImg) boxImg.classList.remove("is-actual");
+            }
+            function openLightbox(src) {
+                if (!box || !boxImg || !src) return;
+                boxImg.src = src;
+                box.hidden = false;
+                document.body.classList.add("lightbox-open");
+            }
+            document.querySelectorAll("[data-full-image]").forEach(function (el) {
+                el.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    openLightbox(el.getAttribute("data-full-image"));
+                });
+            });
+            if (box) {
+                box.addEventListener("click", function (event) {
+                    if (event.target === box || event.target.hasAttribute("data-lightbox-close")) closeLightbox();
+                });
+            }
+            if (boxImg) {
+                boxImg.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    boxImg.classList.toggle("is-actual");
+                });
+            }
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") closeLightbox();
+            });
+
+            var payload = document.querySelector("[data-scenario-json]");
+            var chips = document.querySelector("[data-scenario-chips]");
+            if (payload && chips) {
+                var list = [];
+                try { list = JSON.parse(payload.textContent || "[]"); } catch (err) { list = []; }
+                var form = chips.closest("form");
+                chips.addEventListener("click", function (event) {
+                    var btn = event.target.closest("[data-scenario-id]");
+                    if (!btn || !form) return;
+                    var item = list.find(function (row) { return row.id === btn.getAttribute("data-scenario-id"); });
+                    if (!item) return;
+                    var outcome = (form.querySelector("[name=outcome]") || {}).value || "win";
+                    var notes = form.querySelector("[name=notes]");
+                    var scenario = form.querySelector("[name=scenario]");
+                    if (notes) notes.value = outcome === "loss" ? item.loss : item.win;
+                    if (scenario) scenario.value = item.label;
+                    chips.querySelectorAll(".scenario-chip").forEach(function (chip) { chip.classList.remove("is-active"); });
+                    btn.classList.add("is-active");
+                });
+                var outcomeSelect = form && form.querySelector("[name=outcome]");
+                if (outcomeSelect) {
+                    outcomeSelect.addEventListener("change", function () {
+                        var active = chips.querySelector(".scenario-chip.is-active");
+                        if (!active) return;
+                        active.click();
+                    });
+                }
+            }
         })();
     </script>
 </body>

@@ -18,6 +18,22 @@ from ..templating import render
 router = APIRouter()
 
 
+def _clock_value(raw: str) -> str:
+    text = (raw or "").strip()
+    if not text:
+        return ""
+    parts = text.split(":")
+    if len(parts) < 2:
+        return ""
+    try:
+        hour, minute = int(parts[0]), int(parts[1])
+    except ValueError:
+        return ""
+    if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+        return ""
+    return f"{hour:02d}:{minute:02d}"
+
+
 def _owned_trade(db: Session, trade_id: int, user: User) -> TradeLog | None:
     trade = db.get(TradeLog, trade_id)
     if not trade or trade.user_id != user.id:
@@ -243,6 +259,9 @@ async def create_trade(
     session: str = Form("Day"),
     pnl_amount: float = Form(...),
     outcome: str = Form("win"),
+    scenario: str = Form(""),
+    open_time: str = Form(""),
+    close_time: str = Form(""),
     notes: str = Form(""),
     chart_image: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
@@ -282,6 +301,9 @@ async def create_trade(
         session=session.strip() or "Day",
         pnl_amount=pnl_amount,
         outcome=result,
+        scenario=scenario.strip()[:80],
+        open_time=_clock_value(open_time),
+        close_time=_clock_value(close_time),
         notes=notes.strip(),
     )
     db.add(trade)

@@ -1,0 +1,11 @@
+<div class="scenario-block span-full">
+    <p class="scenario-label">Common setups</p>
+    <p class="form-hint">Tap one used by XAU/BTC traders. It fills the lesson. Then edit it to what you actually did.</p>
+    <input type="hidden" name="scenario" value="{{ scenario_value|default('') }}">
+    <div class="scenario-chips" data-scenario-chips>
+        {% for item in scenarios %}
+        <button type="button" class="scenario-chip{% if scenario_value == item.label %} is-active{% endif %}" data-scenario-id="{{ item.id }}">{{ item.label }}</button>
+        {% endfor %}
+    </div>
+</div>
+<script type="application/json" data-scenario-json>{{ scenarios | tojson }}</script>

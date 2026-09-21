@@ -9,6 +9,15 @@
             <span class="trade-badge {{ 'badge-win' if trade.outcome == 'win' else ('badge-loss' if trade.outcome == 'loss' else 'badge-be') }}">
                 {{ 'WIN' if trade.outcome == 'win' else ('LOSS' if trade.outcome == 'loss' else 'BE') }}
             </span>
+            {% if trade.session %}
+            <span class="trade-badge badge-session">{{ trade.session }}</span>
+            {% endif %}
+            {% if trade.clock_range %}
+            <span class="trade-badge badge-session">{{ trade.clock_range }}{% if trade.duration_label %} · {{ trade.duration_label }}{% endif %}</span>
+            {% endif %}
+            {% if trade.scenario %}
+            <span class="trade-badge badge-market">{{ trade.scenario }}</span>
+            {% endif %}
         </div>
     </div>
     <div class="trade-hero-pnl {% if trade.pnl_amount >= 0 %}profit{% else %}loss{% endif %}">
@@ -33,8 +42,11 @@
     <div class="trade-gallery">
         {% for img in trade.images %}
         <div class="gallery-card">
-            <img src="/media/{{ img.filename }}" alt="{{ img.caption or 'Trade chart' }}" loading="lazy">
+            <button type="button" class="gallery-open" data-full-image="/media/{{ img.filename }}" aria-label="View full chart">
+                <img src="/media/{{ img.filename }}" alt="{{ img.caption or 'Trade chart' }}" loading="lazy">
+            </button>
             <div class="gallery-card-body">
+                <button type="button" class="text-link gallery-full-btn" data-full-image="/media/{{ img.filename }}">View full chart</button>
                 <form action="/trades/{{ trade.id }}/images/{{ img.id }}/delete" method="post" class="inline-form">
                     <button type="submit" class="btn-delete" onclick="return confirm('Remove this image?')">Remove</button>
                 </form>

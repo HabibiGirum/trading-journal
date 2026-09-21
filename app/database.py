@@ -107,6 +107,9 @@ def migrate_schema() -> None:
                     _add_column(conn, table, "profile_id", "INTEGER")
                 _add_column(conn, "trading_profiles", "starting_balance", "FLOAT")
                 _add_column(conn, "trading_profiles", "max_trades_per_day", "INTEGER")
+                _add_column(conn, "trade_logs", "scenario", "VARCHAR(80)")
+                _add_column(conn, "trade_logs", "open_time", "VARCHAR(8)")
+                _add_column(conn, "trade_logs", "close_time", "VARCHAR(8)")
                 flag_type = "BOOLEAN" if engine.dialect.name == "postgresql" else "INTEGER"
                 for col in ("session_asia", "session_london", "session_newyork", "focus_xau", "focus_btc"):
                     _add_column(conn, "trading_profiles", col, flag_type)
@@ -119,6 +122,9 @@ def migrate_schema() -> None:
                     conn.execute(text(f"UPDATE trading_profiles SET session_asia = {no} WHERE session_asia IS NULL"))
                     conn.execute(text(f"UPDATE trading_profiles SET focus_xau = {yes} WHERE focus_xau IS NULL"))
                     conn.execute(text(f"UPDATE trading_profiles SET focus_btc = {yes} WHERE focus_btc IS NULL"))
+                    conn.execute(text("UPDATE trade_logs SET scenario = '' WHERE scenario IS NULL"))
+                    conn.execute(text("UPDATE trade_logs SET open_time = '' WHERE open_time IS NULL"))
+                    conn.execute(text("UPDATE trade_logs SET close_time = '' WHERE close_time IS NULL"))
                 except OperationalError:
                     pass
         finally:

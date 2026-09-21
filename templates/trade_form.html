@@ -3,8 +3,8 @@
 {% block content %}
 <section class="form-panel">
     <h2>Add a trade</h2>
-    <p class="form-hint">Today {{ today_count }} / {{ max_trades }} trades. Stop when you hit the cap.</p>
-    <form action="/trades" method="post" enctype="multipart/form-data" class="entry-form">
+    <p class="form-hint">Today {{ today_count }} / {{ max_trades }} trades. Stop when you hit the cap. Add the clock from open to close.</p>
+    <form action="/trades" method="post" enctype="multipart/form-data" class="entry-form cal-form-grid">
         <label>
             Date
             <input type="date" name="trade_date" value="{{ prefill_date }}" required>
@@ -28,6 +28,14 @@
             </select>
         </label>
         <label>
+            Opened at
+            <input type="time" name="open_time">
+        </label>
+        <label>
+            Closed at
+            <input type="time" name="close_time">
+        </label>
+        <label>
             Result
             <select name="outcome" required>
                 <option value="win">Win</option>
@@ -38,15 +46,16 @@
             Profit or loss ($)
             <input type="number" step="0.01" name="pnl_amount" placeholder="120 or -80" required>
         </label>
+        {% include "_lesson_scenarios.html" %}
         <label class="span-full">
             Lesson
-            <textarea name="notes" rows="5" placeholder="If you lost: what was the mistake? If you won: how did you gain?"></textarea>
+            <textarea name="notes" rows="6" placeholder="If you lost: what was the mistake? If you won: how did you gain?"></textarea>
         </label>
         <label>
             Chart (optional)
             <input type="file" name="chart_image" accept=".png,.jpg,.jpeg,.webp">
         </label>
-        <button type="submit">Save trade</button>
+        <button type="submit" class="span-full">Save trade</button>
     </form>
 </section>
 {% endblock %}
