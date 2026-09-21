@@ -1,4 +1,5 @@
 .venv/
+.schema.lock
 __pycache__/
 *.py[cod]
 *.egg-info/

@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from sqlalchemy import create_engine, inspect, text
+import fcntl
+from pathlib import Path
+
+from sqlalchemy import create_engine, event, inspect, text
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.url import make_url
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from .config import get_settings
@@ -18,13 +24,34 @@ def _normalize_db_url(url: str) -> str:
     return url
 
 
+def _sqlite_file(url: str) -> Path | None:
+    parsed = make_url(url)
+    if not parsed.drivername.startswith("sqlite") or not parsed.database:
+        return None
+    return Path(parsed.database)
+
+
+def _configure_sqlite(engine: Engine) -> None:
+    @event.listens_for(engine, "connect")
+    def _on_connect(dbapi_conn, _connection_record):  # noqa: ANN001
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+
 def get_engine():
     global _engine, SessionLocal
     if _engine is None:
         settings = get_settings()
         url = _normalize_db_url(settings.database_url)
+        sqlite_path = _sqlite_file(url)
+        if sqlite_path:
+            sqlite_path.parent.mkdir(parents=True, exist_ok=True)
         connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
         _engine = create_engine(url, connect_args=connect_args, pool_pre_ping=True)
+        if url.startswith("sqlite"):
+            _configure_sqlite(_engine)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
     return _engine
 
@@ -39,7 +66,7 @@ def get_db():
         db.close()
 
 
-def _add_column(conn, dialect: str, table: str, column: str, coltype: str) -> None:
+def _add_column(conn, table: str, column: str, coltype: str) -> None:
     inspector = inspect(conn)
     if table not in inspector.get_table_names():
         return
@@ -49,14 +76,30 @@ def _add_column(conn, dialect: str, table: str, column: str, coltype: str) -> No
     conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {coltype}"))
 
 
+def _schema_lock_path(engine: Engine) -> Path:
+    sqlite_path = _sqlite_file(str(engine.url))
+    if sqlite_path:
+        return sqlite_path.with_name(".schema.lock")
+    return Path("/tmp/tradepath-schema.lock")
+
+
 def migrate_schema() -> None:
     from . import models  # noqa: F401
 
     engine = get_engine()
-    Base.metadata.create_all(bind=engine)
-    dialect = engine.dialect.name
-    int_type = "INTEGER"
-    with engine.begin() as conn:
-        for table in ("trade_logs", "trading_plans", "analysis_notes"):
-            _add_column(conn, dialect, table, "user_id", int_type)
-            _add_column(conn, dialect, table, "profile_id", int_type)
+    lock_path = _schema_lock_path(engine)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            try:
+                Base.metadata.create_all(bind=engine)
+            except OperationalError as exc:
+                if "already exists" not in str(exc).lower():
+                    raise
+            with engine.begin() as conn:
+                for table in ("trade_logs", "trading_plans", "analysis_notes"):
+                    _add_column(conn, table, "user_id", "INTEGER")
+                    _add_column(conn, table, "profile_id", "INTEGER")
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
